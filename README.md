@@ -13,7 +13,9 @@
 | `group` | 指定分組 `treatment`／`control`，不填就隨機 | `?group=control` |
 | `dev` | 研究者模式（可跳關、看正確性標記）；上傳的資料 `dev` 欄為 TRUE | `?dev=1` |
 
-組合起來：`https://sufutree.github.io/SSI-Post-Moderation-Platform/?t=12&sid=A01`
+正式網址（Vercel，push 到 main 會自動更新）：`https://ssiplatform.vercel.app/`
+
+組合起來：`https://ssiplatform.vercel.app/?t=12&sid=A01`
 
 ## 一、設定 Google 試算表（Apps Script）
 
