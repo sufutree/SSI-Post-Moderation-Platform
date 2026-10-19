@@ -1,0 +1,65 @@
+氣候能源社群模擬平台｜人類圖格位所使用的替代圖片
+下載日期：2026-09-27　來源：Wikimedia Commons
+
+這些是《人類撰寫素材清單 v2》為「人類圖」格位挑選的 CC 授權替代圖，
+用來取代原始貼文的配圖（依指引，真實貼文附圖不直接使用）。
+平台目前是以 Wikimedia 的 Special:FilePath 連結呈現；這裡的本機副本
+是為了離線施測或圖床被封鎖時可以改用。
+
+⚠ 尚待補齊：下表的「授權」是素材清單記錄的授權類型，但 CC 授權要求
+標示作者姓名，各檔案的作者名稱請開啟對應的 Commons 檔案頁抄錄後補上。
+
+────────────────────────────────────────────────────────
+
+img_03.jpg　→　貼文 #3（素材 A09，漁電共生・正確・人類圖）
+內容：烏魚子
+授權：CC BY 2.0
+檔案頁：https://commons.wikimedia.org/wiki/File:%E8%BF%AA%E5%8C%96%E8%A1%97--%E7%83%8F%E9%AD%9A%E5%AD%90_(6730868161).jpg
+作者：（待補）
+
+img_04.jpg　→　貼文 #4（素材 B07，電網與電費・正確・人類圖）
+內容：台電電費單
+授權：CC BY-SA 4.0
+檔案頁：https://commons.wikimedia.org/wiki/File:TPC_Keelung_Branch_electricity_bill_G0113041016443.jpg
+作者：（待補）
+
+img_09.jpg　→　貼文 #9（素材 A02，漁電共生・含問題・人類圖）
+內容：水試所文蛤照
+授權：CC，Attribution
+檔案頁：https://commons.wikimedia.org/wiki/File:Meretrix_taiwanica_tfrin_03.jpg
+作者：（待補）
+
+img_10.jpg　→　貼文 #10（素材 B03，電網與電費・含問題・人類圖）
+內容：台灣家用電表（1993 大同 D4S）
+授權：CC BY-SA 3.0
+檔案頁：https://commons.wikimedia.org/wiki/File:1993_Tatung_D4S_2S_watthour_meter.jpg
+作者：（待補）
+
+img_16.jpg　→　貼文 #16（素材 B12，電網與電費・正確・人類圖）
+內容：電子式電表（2010 中興 kV2c）
+授權：CC BY-SA 3.0
+檔案頁：https://commons.wikimedia.org/wiki/File:2010_Chunghsin_kV2c_electronic_watthour_meter.jpg
+作者：（待補）
+
+img_21.png　→　貼文 #21（素材 A05，漁電共生・含問題・人類圖）
+內容：臺南鹽田太陽光電場空拍（台南七股／將軍，光電場與周邊魚塭同框）
+授權：CC，Attribution
+檔案頁：https://commons.wikimedia.org/wiki/File:%E8%87%BA%E5%8D%97%E9%B9%BD%E7%94%B0%E5%A4%AA%E9%99%BD%E5%85%89%E9%9B%BB%E5%A0%B4.png
+作者：台灣電力公司
+原始尺寸：1600×900
+換圖說明：2026-09-28 換圖。原用「典寶溪 B 區滯洪池光電一期」（img_21.jpg，已刪除），
+　　　　　畫面是滯洪池水面型光電、看不到魚塭，與本篇「良田魚塭被光電板覆蓋」的主張對不上；
+　　　　　現用圖為台南鹽田光電場空拍，光電板陣列與周邊魚塭同時入鏡，較貼近貼文敘述。
+　　　　　同日 #21 的素材也由 A03 改為 A05（見《平台改建說明 v2》）。
+
+img_22.jpg　→　貼文 #22（素材 B06，電網與電費・含問題・人類圖）
+內容：台中液化天然氣接收站
+授權：CC，Attribution
+檔案頁：https://commons.wikimedia.org/wiki/File:Taichung_LNG_Terminal.jpg
+作者：（待補）
+⚠ 此檔原始解析度僅 299×168，放大會模糊，建議另尋較清晰的照片替換。
+
+────────────────────────────────────────────────────────
+
+尚無圖片的格位：
+貼文 #15（素材 A10，漁電共生・正確・人類圖）── 素材清單標註「待補」，查無可用替代圖。

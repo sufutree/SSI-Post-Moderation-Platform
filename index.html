@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>台灣綠能生活討論區｜貼文審核</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --surface-2:#F5F7F9; --surface-3:#E8EDF1;
+  --ink:#18242A; --ink-2:#4E626B; --ink-3:#8296A0;
+  --line:#DCE3E8; --line-2:#EAEFF2;
+  --brand:#2F6E9E; --brand-soft:#E4EFF6;
+  --ok:#2E8B6F; --ok-soft:#E2F1EC;
+  --warn:#B0731E; --warn-soft:#F8EFDE;
+  --bad:#C4544F; --bad-soft:#FBEAE7;
+  --unsure:#B0821E; --unsure-soft:#FAF1DE;
+  --ssr:#3C7A57; --ssr-soft:#E6F1EA;
+  --ai:#7A3DB8; --ai-soft:#EFE5F9;
+  --shadow:0 1px 2px rgba(24,36,42,.05),0 10px 26px -14px rgba(24,36,42,.25);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1619; --surface:#172226; --surface-2:#1C282D; --surface-3:#222F35;
+    --ink:#E3EBEE; --ink-2:#A2B4BC; --ink-3:#77898F;
+    --line:#2A383E; --line-2:#223036;
+    --brand:#7CB8DA; --brand-soft:#17303C;
+    --ok:#6FC2A5; --ok-soft:#16302A;
+    --warn:#DEAE60; --warn-soft:#2E2617;
+    --bad:#E08883; --bad-soft:#33201E;
+    --unsure:#DEAE60; --unsure-soft:#2E2617;
+    --ssr:#79BA95; --ssr-soft:#182C22;
+    --ai:#CFB0F2; --ai-soft:#33244A;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 26px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1619; --surface:#172226; --surface-2:#1C282D; --surface-3:#222F35;
+  --ink:#E3EBEE; --ink-2:#A2B4BC; --ink-3:#77898F;
+  --line:#2A383E; --line-2:#223036;
+  --brand:#7CB8DA; --brand-soft:#17303C;
+  --ok:#6FC2A5; --ok-soft:#16302A;
+  --warn:#DEAE60; --warn-soft:#2E2617;
+  --bad:#E08883; --bad-soft:#33201E;
+  --unsure:#DEAE60; --unsure-soft:#2E2617;
+  --ssr:#79BA95; --ssr-soft:#182C22;
+  --ai:#CFB0F2; --ai-soft:#33244A;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 26px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:15px;line-height:1.7;-webkit-text-size-adjust:100%}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,h4{margin:0;line-height:1.4}
+p{margin:0}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+[hidden]{display:none !important}
+
+/* ---------- 研究者列（?dev=1 才出現） ---------- */
+.devbar{position:sticky;top:0;z-index:60;background:var(--ssr-soft);border-bottom:1px solid var(--line);padding:.35rem 1rem;display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;font-size:.74rem;color:var(--ssr)}
+.devbar b{border:1px solid var(--ssr);border-radius:3px;padding:0 .35rem}
+.devbar label{display:inline-flex;align-items:center;gap:.3rem}
+.devbar select{font-size:.74rem;padding:.05rem .3rem;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+
+/* ---------- 版面 ---------- */
+.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.topin{max-width:42rem;margin:0 auto;padding:.55rem 1rem;display:flex;align-items:center;gap:.6rem}
+.grp{width:2rem;height:2rem;border-radius:8px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex:0 0 auto}
+.topin .gname{font-weight:700;font-size:.95rem;line-height:1.3}
+.topin .gsub{font-size:.72rem;color:var(--ink-3)}
+.topin .phase{margin-left:auto;font-size:.74rem;color:var(--ink-3);white-space:nowrap}
+.wrap{max-width:42rem;margin:0 auto;padding:1.1rem 1rem 4rem}
+.wrap.wide{max-width:84rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:1rem}
+.panel h2{font-size:1.05rem;margin-bottom:.5rem}
+.panel p{color:var(--ink-2);font-size:.9rem;margin-bottom:.6rem}
+.panel p b{color:var(--ink);font-weight:500}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:.5rem 1rem;font-size:.88rem}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:500}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.field{display:flex;flex-direction:column;gap:.3rem;font-size:.84rem;color:var(--ink-2);margin:.4rem 0 1rem}
+.field input{border:1px solid var(--line);border-radius:8px;padding:.45rem .7rem;background:var(--surface-2);max-width:16rem}
+.progress{height:4px;background:var(--surface-3);border-radius:99px;overflow:hidden;margin:.2rem 0 .9rem}
+.progress i{display:block;height:100%;background:var(--brand);transition:width .35s ease}
+.counter{font-size:.76rem;color:var(--ink-3)}
+textarea{width:100%;font-size:.88rem;border:1px solid var(--line);border-radius:8px;padding:.55rem .7rem;background:var(--surface-2);color:var(--ink);resize:vertical;line-height:1.6;min-height:3.2rem}
+
+/* ---------- 貼文 ---------- */
+.queue{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.qhead{display:flex;align-items:center;gap:.6rem;padding:.5rem .9rem;background:var(--surface-2);border-bottom:1px solid var(--line);font-size:.76rem;color:var(--ink-3)}
+.qhead .right{margin-left:auto;font-variant-numeric:tabular-nums}
+.ph{display:flex;gap:.65rem;align-items:center;padding:.85rem 1rem .5rem}
+.av{width:2.5rem;height:2.5rem;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.92rem}
+.av.person{border-radius:50%;background:#D7DEE3;color:#41525B}
+.av.page{border-radius:10px;color:#fff}
+.pm{flex:1;min-width:0}
+.pn{font-weight:500;font-size:.93rem;line-height:1.35}
+.ps{font-size:.72rem;color:var(--ink-3)}
+.pb{padding:.1rem 1rem .7rem;color:var(--ink);font-size:.92rem;white-space:pre-wrap;line-height:1.8}
+.pb b{display:block;font-weight:700;margin-bottom:.15rem}
+.media{border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);background:var(--surface-2);cursor:zoom-in}
+.media img{display:block;width:100%;max-height:22rem;object-fit:contain;background:var(--surface-2)}
+.media.duo{display:flex;aspect-ratio:2/1;max-height:22rem}
+.media.duo img{flex:1 1 0;min-width:0;height:100%;max-height:none;object-fit:cover}
+.rtags{display:flex;gap:.35rem;padding:0 1rem .4rem}
+body:not(.dev-tags) .rtags{display:none}
+.ssrtag{display:none;margin-left:.4rem;font-size:.66rem;font-weight:600;color:var(--ssr);background:var(--ssr-soft);border:1px solid var(--ssr);border-radius:4px;padding:0 .3rem;vertical-align:1px}
+.ssrtag.none{color:var(--ink-3);background:transparent;border-color:var(--line);font-weight:400}
+body.dev-ssr .ssrtag{display:inline}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;padding:.08rem .45rem;border-radius:99px;white-space:nowrap}
+.tag.ok{color:var(--ok);background:var(--ok-soft)}
+.tag.bad{color:var(--bad);background:var(--bad-soft)}
+.tag.un{color:var(--unsure);background:var(--unsure-soft)}
+.tag.hum{color:var(--brand);background:var(--brand-soft)}
+.tag.rai{color:var(--ai);background:var(--ai-soft)}
+.ssrline{margin:.7rem 1rem .2rem;background:var(--ssr-soft);border-radius:8px;padding:.45rem .7rem;font-size:.8rem;color:var(--ssr)}
+.ssrline b{font-size:.7rem;margin-right:.4rem}
+
+/* ---------- 審核 ---------- */
+.decide{border-top:1px solid var(--line-2);padding:.8rem .9rem 1rem;display:grid;gap:.7rem;margin-top:.6rem}
+.vbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+@media (max-width:460px){.vbtns{grid-template-columns:1fr}}
+.vbtn{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:.65rem .4rem;font-size:.88rem;font-weight:500}
+.vbtn:hover{border-color:var(--c)}
+.vbtn[aria-pressed="true"]{border-color:var(--c);background:var(--cs);color:var(--c)}
+.vbtn.pass{--c:var(--ok);--cs:var(--ok-soft)}
+.vbtn.warn{--c:var(--warn);--cs:var(--warn-soft)}
+.vbtn.back{--c:var(--bad);--cs:var(--bad-soft)}
+.subform{display:grid;gap:.6rem;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:.7rem .8rem}
+.subform .lab{font-size:.8rem;color:var(--ink-2);font-weight:500}
+.cat{display:grid;grid-template-columns:5.6rem 1fr;gap:.5rem;align-items:start}
+@media (max-width:460px){.cat{grid-template-columns:1fr;gap:.25rem}}
+.cat .cn{font-size:.74rem;color:var(--ink-3);padding-top:.28rem}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem}
+.chip{font-size:.78rem;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:.22rem .65rem;text-align:left;line-height:1.4}
+.chip:hover{border-color:var(--brand)}
+.chip[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:500}
+.labelprev{font-size:.8rem;border-left:3px solid var(--warn);background:var(--warn-soft);color:var(--ink);padding:.4rem .6rem;border-radius:0 6px 6px 0}
+.labelprev small{display:block;font-size:.68rem;color:var(--ink-3)}
+.qfoot{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.qfoot .hint{font-size:.76rem;color:var(--ink-3);margin-right:auto}
+
+/* ---------- 分類任務 ---------- */
+.taskhead{margin-bottom:.7rem}
+.taskhead h2{font-size:1.08rem}
+.taskhead p{font-size:.85rem;color:var(--ink-2)}
+.traywrap{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.6rem .8rem .8rem;margin-bottom:.8rem;box-shadow:var(--shadow)}
+.trayhead{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap;margin-bottom:.45rem;font-size:.8rem}
+.trayhead b{color:var(--unsure)}
+.trayhead .cnt{margin-left:auto;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.tray{display:flex;gap:.7rem;overflow-x:auto;overflow-y:hidden;padding:.35rem .2rem .7rem;min-height:20rem;border:2px dashed var(--unsure);border-radius:10px;background:var(--unsure-soft);align-items:stretch}
+.tray.over{background:var(--brand-soft);border-color:var(--brand)}
+.tray .emptymsg{margin:auto;font-size:.85rem;color:var(--ink-3)}
+.bigcard{width:19rem;flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;cursor:grab;box-shadow:var(--shadow)}
+.bigcard.dragging{opacity:.4}
+.bigcard .bhead{display:flex;align-items:center;gap:.45rem;padding:.5rem .65rem .3rem;border-bottom:1px solid var(--line-2)}
+.bigcard .av{width:1.7rem;height:1.7rem;font-size:.7rem}
+.bigcard .av.page{border-radius:6px}
+.bigcard .bacct{font-size:.78rem;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bigcard .bttl{font-size:.88rem;font-weight:700;padding:.45rem .65rem .2rem;line-height:1.45}
+.bigcard .bbody{font-size:.78rem;color:var(--ink-2);line-height:1.65;padding:0 .65rem .4rem;max-height:7.2rem;overflow-y:auto;white-space:pre-wrap;overscroll-behavior:contain}
+.bigcard .bimg{background:var(--surface-2);border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);height:7.5rem;display:flex;gap:2px;cursor:zoom-in}
+.bigcard.imgmode .bimg{height:13rem}
+.bigcard .bimg img{flex:1;min-width:0;width:100%;height:100%;object-fit:cover;display:block}
+.bigcard .bfoot{margin-top:auto;display:flex;gap:.35rem;padding:.5rem .55rem .55rem}
+.zbtn,.magbtn,.pickbtn{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:.3rem .25rem;font-size:.76rem;line-height:1.3;color:var(--ink-2)}
+.zbtn{flex:1}
+.zbtn:hover{border-color:var(--brand);color:var(--brand)}
+.magbtn{color:var(--brand);background:var(--surface);flex:0 0 auto;padding:.3rem .5rem}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+@media (max-width:760px){.zones{grid-template-columns:1fr}}
+.zone{border:2px dashed var(--line);border-radius:12px;padding:.6rem .7rem .7rem;min-height:9rem;background:var(--surface)}
+.zone.over{background:var(--brand-soft);border-style:solid}
+.zone h4{font-size:.9rem;margin-bottom:.5rem;display:flex;gap:.4rem}
+.zone h4 .n{font-size:.74rem;font-weight:400;color:var(--ink-3);margin-left:auto}
+.zone.z-a{border-color:var(--ok)} .zone.z-a h4{color:var(--ok)}
+.zone.z-b{border-color:var(--bad)} .zone.z-b h4{color:var(--bad)}
+.zonecards{display:flex;flex-wrap:wrap;gap:.45rem;min-height:3.2rem;align-content:flex-start}
+.zone .zempty{font-size:.78rem;color:var(--ink-3);padding:.5rem .2rem}
+.minicard{display:flex;align-items:center;gap:.45rem;width:15.5rem;max-width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:.3rem .4rem;cursor:grab}
+.minicard .mth{width:2.6rem;height:2.2rem;object-fit:cover;border-radius:5px;flex:0 0 auto;background:var(--line-2)}
+.minicard .mno{width:2.6rem;height:2.2rem;border-radius:5px;flex:0 0 auto;background:var(--line-2);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--ink-3)}
+.minicard .mtxt{flex:1;min-width:0;font-size:.74rem;line-height:1.35}
+.minicard .mtxt b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.minicard .mtxt span{color:var(--ink-3);font-size:.68rem}
+.minicard .mx{border:none;background:none;color:var(--ink-3);font-size:.9rem;padding:0 .2rem}
+.taskfoot{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin-top:.9rem}
+.taskfoot .prog{font-size:.82rem;color:var(--ink-2);margin-right:auto}
+.pickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:.8rem;margin:.6rem 0}
+.pickgrid .bigcard{width:auto;cursor:default}
+.bigcard.selected{outline:3px solid var(--brand);outline-offset:-1px}
+.pickbtn{flex:1}
+.bigcard.selected .pickbtn{background:var(--brand);border-color:var(--brand);color:#fff}
+
+/* ---------- 問答 ---------- */
+.q{margin-bottom:1.1rem}
+.q:last-child{margin-bottom:0}
+.q .qt{font-size:.9rem;color:var(--ink);margin-bottom:.4rem}
+.opt{display:flex;gap:.45rem;align-items:flex-start;font-size:.86rem;color:var(--ink-2);margin:.3rem 0}
+.opt input{margin-top:.35rem}
+.likert{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem;font-size:.72rem;color:var(--ink-2)}
+.likert label{display:flex;flex-direction:column;align-items:center;gap:.15rem;text-align:center;line-height:1.3}
+.refrow{display:flex;gap:.6rem;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:.45rem .6rem;margin-bottom:.6rem;cursor:pointer}
+.refrow img,.refrow .mno{width:3.4rem;height:2.6rem;object-fit:cover;border-radius:6px;flex:0 0 auto;background:var(--line-2)}
+.refrow .mno{display:flex;align-items:center;justify-content:center;font-size:.62rem;color:var(--ink-3)}
+.refrow .t{flex:1;min-width:0;font-size:.82rem;line-height:1.45}
+.refrow .t span{display:block;font-size:.72rem;color:var(--ink-3)}
+.vtag{font-size:.7rem;font-weight:700;border-radius:99px;padding:.08rem .5rem;white-space:nowrap}
+.vtag.pass{color:var(--ok);background:var(--ok-soft)}
+.vtag.warn{color:var(--warn);background:var(--warn-soft)}
+.vtag.back{color:var(--bad);background:var(--bad-soft)}
+.errmsg{font-size:.78rem;color:var(--bad)}
+.debrief li{font-size:.86rem;color:var(--ink-2);margin-bottom:.55rem}
+.debrief li b{color:var(--ink);font-weight:500}
+.debrief ul{padding-left:1.2rem;margin:.3rem 0 .8rem}
+
+/* ---------- 放大 ---------- */
+.modal{position:fixed;inset:0;z-index:90;background:rgba(10,18,22,.55);display:flex;align-items:center;justify-content:center;padding:1.5rem 1rem}
+.msheet{background:var(--surface);border-radius:14px;max-width:46rem;width:100%;max-height:100%;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.msheet header{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;border-bottom:1px solid var(--line)}
+.msheet header .x{margin-left:auto}
+.mbody{overflow:auto;padding:1rem 1.2rem 1.2rem}
+.mbody h3{font-size:1.02rem;margin-bottom:.5rem}
+.mbody .full{font-size:.92rem;color:var(--ink-2);white-space:pre-wrap;line-height:1.85}
+.mbody .mimgs{display:flex;gap:.6rem;margin-top:.9rem;flex-wrap:wrap}
+.mbody .mimgs img{max-width:100%;max-height:24rem;border-radius:8px;border:1px solid var(--line-2);cursor:zoom-in}
+.msheet footer{display:flex;gap:.5rem;padding:.7rem 1rem;border-top:1px solid var(--line);flex-wrap:wrap;justify-content:flex-end}
+.lightbox{position:fixed;inset:0;z-index:95;background:rgba(6,12,15,.9);display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:1rem}
+.lightbox img{max-width:96vw;max-height:92vh;object-fit:contain;border-radius:6px}
+.lightbox .close{position:absolute;top:1rem;right:1.2rem;color:#fff;background:rgba(255,255,255,.14);border:none;border-radius:8px;padding:.35rem .8rem;font-size:.85rem}
+
+/* ---------- 社團經營 ---------- */
+.topin{max-width:64rem}
+.gstats{margin-left:auto;display:flex;gap:1rem;align-items:center}
+.gstats .phase{margin-left:0}
+.gstat{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2}
+.gstat b{font-size:.95rem;font-variant-numeric:tabular-nums;transition:color .4s}
+.gstat span{font-size:.66rem;color:var(--ink-3)}
+.gstat b.up,.fcnt.up{color:var(--ok)}
+.gstat span,.topin .gname{white-space:nowrap}
+@media (max-width:520px){ #statsBox2,.gstats .phase{display:none} .gstats{gap:.8rem} }
+.wrap.duo{max-width:64rem;display:grid;grid-template-columns:minmax(0,1fr) 19rem;gap:1.2rem;align-items:start}
+.wrap.duo > .step:not(#s-review):not(#s-fast){grid-column:1 / -1}
+/* ---------- 第一輪：限時 ---------- */
+.flood{display:inline-flex;align-items:center;gap:.35rem;color:var(--bad);font-weight:500}
+.flood i{width:.45rem;height:.45rem;border-radius:50%;background:var(--bad);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.tbar{height:5px;background:var(--surface-3)}
+.tbar i{display:block;height:100%;width:100%;background:var(--warn);transform-origin:left}
+.tbar.low i{background:var(--bad)}
+.tsec{font-variant-numeric:tabular-nums;font-weight:700;color:var(--warn);min-width:2.2rem;text-align:right}
+.tsec.low{color:var(--bad)}
+.vbtns.fast3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:460px){.vbtns.fast3{grid-template-columns:repeat(3,1fr)}}
+.queue.fastq{overflow:clip}
+.fastq .decide{position:sticky;bottom:0;background:var(--surface);z-index:5;box-shadow:0 -6px 12px -8px rgba(0,0,0,.18)}
+.fastq .tbar{position:sticky;top:0;z-index:5}
+.vbtns.fast3 .vbtn{padding:.85rem .3rem;font-size:.92rem;line-height:1.35}
+.fastq .decide.done{position:static;box-shadow:none}
+.timeup{text-align:center;color:var(--bad);font-weight:700;padding:.6rem 0}
+.conf{display:grid;gap:.5rem}
+.conf .chosen{font-size:.8rem;color:var(--ink-3)}
+.conf .lab{font-size:.88rem;font-weight:500}
+.conf input[type=range]{display:block;width:100%;margin:.2rem 0 0;accent-color:var(--brand)}
+.conf input.untouched::-webkit-slider-thumb{opacity:0}
+.conf input.untouched::-moz-range-thumb{opacity:0}
+.conftick{position:relative;height:1.1rem;margin:0 8px;font-size:.75rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.conftick span{position:absolute;top:0;transform:translateX(-50%)}
+.conftick span.on{color:var(--brand);font-weight:700}
+.confends{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink-3);margin-top:-.1rem}
+.prevround{font-size:.72rem;color:var(--ink-2)}
+.fitem.removed{opacity:.45}
+.fitem .frm{font-size:.7rem;color:var(--bad)}
+@media (max-width:860px){.wrap.duo{grid-template-columns:1fr}}
+.feedpanel{position:sticky;top:1rem;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.feedpanel h3{font-size:.85rem;padding:.6rem .85rem;border-bottom:1px solid var(--line-2);display:flex;align-items:baseline;gap:.5rem}
+.feedpanel h3 span{font-size:.72rem;color:var(--ink-3);font-weight:400;margin-left:auto}
+.feedlist{max-height:calc(100vh - 9rem);overflow-y:auto}
+@media (max-width:860px){.feedpanel{position:static}.feedlist{max-height:22rem}}
+.fempty{font-size:.8rem;color:var(--ink-3);padding:1rem .85rem}
+.fitem{padding:.6rem .85rem;border-bottom:1px solid var(--line-2);animation:fin .5s ease-out}
+@keyframes fin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.fitem .fh{display:flex;gap:.45rem;align-items:center;font-size:.76rem;color:var(--ink-2)}
+.fitem .av{width:1.5rem;height:1.5rem;font-size:.62rem}
+.fitem .av.page{border-radius:5px}
+.fitem .fh small{margin-left:auto;color:var(--ink-3);font-size:.68rem}
+.fitem .ft{font-size:.82rem;font-weight:500;margin:.3rem 0 .25rem;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45}
+.fitem .fw{font-size:.7rem;color:var(--warn);background:var(--warn-soft);border-radius:5px;padding:.15rem .4rem;margin-bottom:.3rem}
+.fitem .fc{display:flex;gap:.8rem;font-size:.72rem;color:var(--ink-3)}
+.fcnt{font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink-2);transition:color .4s}
+.toast{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:80;background:var(--ink);color:var(--surface);font-size:.8rem;border-radius:99px;padding:.4rem .9rem;animation:tin 2.6s ease forwards;pointer-events:none}
+@keyframes tin{0%{opacity:0;transform:translate(-50%,8px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
+
+/* ---------- 研究者對照 ---------- */
+.reveal{margin-top:1rem;border-top:1px dashed var(--line);padding-top:.9rem}
+.reveal h4{font-size:.8rem;color:var(--bad);margin-bottom:.5rem}
+.tblwrap{overflow-x:auto}
+table.mini{width:100%;border-collapse:collapse;font-size:.76rem;min-width:34rem}
+table.mini th,table.mini td{padding:.32rem .4rem;border-bottom:1px solid var(--line-2);text-align:left;vertical-align:top}
+table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
+</style>
+</head>
+<body>
+
+<div class="devbar" id="devbar" hidden>
+  <b>研究者</b>
+  <label>分組 <select id="devGroup"><option value="treatment">鷹架組</option><option value="control">對照組</option></select></label>
+  <label><input type="checkbox" id="devTags"> 顯示正確性／撰寫來源標記</label>
+  <label><input type="checkbox" id="devSsr" checked> 顯示理由對應的 SSR 面向</label>
+  <label>跳到 <select id="devJump"></select></label>
+  <button type="button" id="devSkip" class="btn">跳過第一輪</button>
+</div>
+
+<header class="top">
+  <div class="topin">
+    <div class="grp">台</div>
+    <div><div class="gname">台灣綠能生活討論區</div><div class="gsub">私密社團</div></div>
+    <div class="gstats">
+      <div class="gstat" id="statsBox" hidden><b id="stMembers">12,418</b><span>成員</span></div>
+      <div class="gstat" id="statsBox2" hidden><b id="stToday">+0</b><span>今日新成員</span></div>
+      <div class="gstat" id="statsBox3" hidden><b id="stLikes">0</b><span>今日按讚</span></div>
+      <div class="phase" id="phase"></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap" id="wrap">
+
+  <!-- 開始 -->
+  <section class="step" id="s-start">
+    <div class="panel">
+      <h2>歡迎</h2>
+      <p>接下來大約需要 15 分鐘。過程中沒有標準答案，照你自己的判斷就好。</p>
+      <label class="field">受試者編號
+        <input type="text" id="sidInput" autocomplete="off">
+      </label>
+      <button class="btn primary" id="btnStart">開始</button>
+    </div>
+  </section>
+
+  <!-- 情境 -->
+  <section class="step" id="s-brief" hidden>
+    <div class="panel">
+      <h2>你是這個社團的審核管理員</h2>
+      <p>「台灣綠能生活討論區」有一萬兩千多位成員，來自全台各地，有住在南部沿海的養殖戶，也有關心電價、環境與食品安全的一般民眾。成員或粉專想在社團發文，都要先經過管理團隊審核，今晚輪到你值班。</p>
+      <p>「漁電共生」是在魚塭上方架設太陽能光電板，讓同一塊地可以一邊養殖水產、一邊發電。這個話題今天突然延燒，大量貼文同時湧進來。每一則的時間有限，你必須很快決定<b>放行</b>、<b>加註提醒後放行</b>或<b>退回</b>，時間到還沒決定的就先跳過。</p>
+      <p>每做一個決定，拉一下你對這個決定有多少把握。</p>
+      <p>放行的貼文會立刻出現在社團動態，上方會顯示社團的成員數和今天的互動。貼文來源很多元，其中也有 AI 生成的內容，就跟一般社群平台一樣。</p>
+      <button class="btn primary" id="btnBrief">開始</button>
+    </div>
+  </section>
+
+  <!-- 第一輪：快速審核 -->
+  <section class="step" id="s-fast" hidden>
+    <div class="counter" id="fsCount"></div>
+    <div class="progress"><i id="fsBar"></i></div>
+    <div id="fsStage"></div>
+  </section>
+
+  <!-- 第一輪結束 -->
+  <section class="step" id="s-mid" hidden>
+    <div class="panel">
+      <h2>湧入的貼文暫時告一段落</h2>
+      <p>現在有時間把剛剛的 12 則重新看一遍，這次不限時間。你可以維持剛才的決定，也可以改變。</p>
+      <p><b>放行</b>　出現在社團<br><b>加註提醒後放行</b>　出現在社團，下方附上你選的提醒<br><b>退回</b>　不出現，作者會收到你選的理由；已放行的會從社團動態移除</p>
+      <button class="btn primary" id="btnMid">開始二次審核</button>
+    </div>
+  </section>
+
+  <!-- 鷹架組前置引導 -->
+  <section class="step" id="s-scaffold" hidden>
+    <div class="panel">
+      <h2>開始之前，先看兩個例子</h2>
+      <p>看到一則貼文時，可以先問自己幾個問題。例如：</p>
+      <div class="ssrline" style="margin:.2rem 0 .5rem"><b>複雜性</b>「離岸風電招標金額是市價兩倍，比核電貴五倍」——這件事還牽涉哪些面向與權衡？當成單一原因會漏掉什麼？</div>
+      <div class="ssrline" style="margin:0 0 .8rem"><b>探究</b>「太陽能板廢料毒性是核廢料的 300 倍」——要確認這個說法，還缺哪些資訊？該去哪裡找？</div>
+      <p>二次審核時，每則貼文下方也會有一句類似的問題，看過就好，不用回答。</p>
+      <button class="btn primary" id="btnScaffold">開始二次審核</button>
+    </div>
+  </section>
+
+  <!-- 審核 -->
+  <section class="step" id="s-review" hidden>
+    <div class="counter" id="rvCount"></div>
+    <div class="progress"><i id="rvBar"></i></div>
+    <div id="rvStage"></div>
+  </section>
+  <aside class="feedpanel" id="feedPanel" hidden>
+    <h3>社團動態<span id="feedCount">0 則</span></h3>
+    <div class="feedlist" id="feedList"><p class="fempty">你放行的貼文會出現在這裡</p></div>
+  </aside>
+
+  <section class="step" id="s-end" hidden>
+    <div class="panel">
+      <h2>完成，謝謝你</h2>
+      <p id="upMsg">正在送出作答紀錄，請先不要關閉這個頁面…</p>
+      <div id="upFallback" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center" hidden>
+        <button class="btn primary" id="btnRetry">重新送出</button>
+        <button class="btn" id="btnExport">下載作答紀錄</button>
+        <button class="btn" id="btnCopy">複製紀錄</button>
+        <span id="copymsg" style="font-size:.78rem;color:var(--ok)"></span>
+      </div>
+      <div id="revealBlock"></div>
+    </div>
+  </section>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="msheet" role="dialog" aria-modal="true" aria-label="貼文全文">
+    <header id="mhead"></header>
+    <div class="mbody" id="mbody"></div>
+    <footer id="mfoot"></footer>
+  </div>
+</div>
+<div class="lightbox" id="lightbox" hidden>
+  <button class="close" id="lbclose">關閉 ✕</button>
+  <img id="lbimg" alt="附圖放大">
+</div>
+
+<script src="reasons.js"></script>
+<script>
+/* ================= 施測設定 =================
+   GAS_URL：Google Apps Script 網頁應用程式網址（部署後貼上，見 README）
+   FAST_SEC：第一輪每則秒數；網址加 ?t=15 可臨時改成 15 秒（允許 3–120） */
+const GAS_URL = 'PASTE_YOUR_APPS_SCRIPT_URL_HERE';
+const FAST_SEC = 10;
+const STUDY = 'fish12_pretest_v1';
+/* ================= 素材 =================
+   poster：發文者類型依原始素材來源配對（媒體／機關／公會粉專、個人轉傳）
+   kind：page＝粉絲專頁，person＝個人帳號 */
+const POSTS = [
+{id:1, source:"human", correctness:"correct", imgType:"none", facet:"complexity",
+ poster:{name:"農漁誌", kind:"page", cat:"新聞與媒體網站", color:"#3D7C5A"}, ago:"3 小時",
+ title:"漁電共生行不行？",
+ body:"政府推動漁電共生盼達到發電及生產雙贏。水試所指出已針對文蛤、虱目魚、吳郭魚、金目鱸、七星鱸，進行光電設施模擬實驗，初步成果在40%光電設施遮蔽率下可維持原產能70%以上。但漁民認為光電設施進入魚塭後，恐怕會影響原有生產效率、收成方式、曬池效率、水流方向、溶氧等，顯示仍有許多實務面問題得先解決。",
+ imgs:[]},
+{id:3, source:"human", correctness:"correct", imgType:"human", facet:"perspective",
+ poster:{name:"綠能推動辦公室", kind:"page", cat:"政府機關", color:"#2F6E9E"}, ago:"5 小時",
+ title:"烏魚子+綠電共生！誰說漁電共生的光電板下沒有魚？",
+ body:"又來到收烏魚採收的季節啦！這次我們來到日運漁電共生室外養殖場，上週五是他們開始放養後第四次採收烏魚了。大量新鮮現流（hiān-lâu）的烏魚隨著運輸車輛傾瀉而下，接著馬上進入烏魚子的加工過程，新鮮的烏魚子呈現鮮豔的黃與橘黃色間，因此有「烏金」的稱呼。\n你能想像這裡原先是一大片廢棄魚塭嗎？經過漁電共生的土地活化再利用，光是這批收成已有近萬尾烏魚、收穫超過三千斤的烏魚子。目前已經取得溯源、產銷履歷，更預計要做出自己漁電共生的品牌，並將漁電共生的養殖技術繼續傳承下去。未來等到案場成功併網後，不僅有烏魚、虱目魚及白蝦等等的水產收益，還有裝置容量達42.9MW的光電板可以發電，可說是一兼二顧，養魚蝦兼發電呢。",
+ imgs:["images_posts/img_03a.jpg","images_posts/img_03c.jpg"]},
+{id:5, source:"human", correctness:"correct", imgType:"ai", facet:"inquiry",
+ poster:{name:"太陽光電系統同業聯盟", kind:"page", cat:"產業公會", color:"#B0731E"}, ago:"1 天",
+ title:"太陽能光電板使用前要先通過20年不破壞的測試",
+ body:"民眾擔憂颱風過後，光電板損壞造成養殖魚汙染。專家表示光電板都須過85%高濕度、零下10度到85度極端溫度的環境模擬，展開長時間多次的熱脹冷縮循環，以證明其耐用度經得起考驗。\n台灣有數家光電板廠商做過光電板泡水實驗，將完整及破碎的光電板分別浸泡在魚缸裡7天，再請第三方檢測；實驗發現光電板物質並未滲出，也沒有影響水質，魚缸裡的魚均存活。",
+ imgs:["ai_images/guide_05.png"]},
+{id:7, source:"human", correctness:"flawed", imgType:"none", facet:"skepticism",
+ poster:{name:"陳秀琴", kind:"person"}, ago:"2 小時",
+ title:"颱風過後、請不要買中南部的養殖魚",
+ body:"因為太陽能版被颱風吹壞掉到魚池、因為太陽能板破了漏出的粉液、非常毒！\n因為魚吃了毒、可能就被撈起、送到市場、假如人吃了、後果難以想像⋯⋯\n忍耐一下 儘可能不要吃「魚」，因為光電板的汙染超強⋯⋯\n不只池魚，沿海面上的太陽能板，也被吹落海，架子吹上岸了。\n這段時間儘量少吃魚了。",
+ imgs:[]},
+{id:9, source:"human", correctness:"flawed", imgType:"human", facet:"complexity",
+ poster:{name:"蔡明宏", kind:"person"}, ago:"6 小時",
+ title:"讓漁民臉綠掉的綠電？",
+ body:"同樣的水，漁電共生池全滅，隔壁一般池都沒事。用蛤的生存條件去想就知道，蛤蜊吃浮游生物和藻類，浮游生物與藻類靠光照生存。光電板遮了光，池底細菌滋生，文蛤沒了陽光殺菌，溫池水溫度又上不來！藻類沒陽光生不出來，食物也沒了，不餓死也病死，想2頭賺錢，門都沒有！",
+ imgs:["images_posts/img_09.jpg"]},
+{id:11, source:"human", correctness:"flawed", imgType:"ai", facet:"perspective",
+ poster:{name:"南部人講真的", kind:"page", cat:"社群", color:"#C4544F"}, ago:"4 小時",
+ title:"知不知道南部為甚麼溫度會特別的高?",
+ body:"其中之一的主要原因是南部的綠地,農地,林地及沿岸的魚業養殖場等,全都拿去裝放大鏡了!了不起的光電產業,讓台灣紅通通的。台灣果然亮起來了。",
+ imgs:["ai_images/guide_11.png"]},
+{id:13, source:"ai", correctness:"correct", imgType:"none", facet:"inquiry",
+ poster:{name:"養殖科普小站", kind:"page", cat:"教育", color:"#2E8B6F"}, ago:"8 小時",
+ title:"「光電板下的文蛤一定養不活」？實驗結果沒那麼單純",
+ body:"常聽到有人說，魚塭一旦架了光電板，底下的東西就都養不起來。不過水試所的養殖試驗裡，多數物種在四成遮蔭下仍能維持約七成產量，只有文蛤明顯偏低——因為牠靠藻類和浮游生物為食，光照一少，食物就跟著少，除非另外投餌。有意思的是，同一份試驗也發現遮蔭能擋掉部分高溫和強降雨，讓池水鹽度不會驟降，對存活率反而是加分。同一套設計放在不同物種身上，結果並不一樣。",
+ imgs:[]},
+{id:15, source:"ai", correctness:"correct", imgType:"human", facet:"skepticism",
+ poster:{name:"產經新視角", kind:"page", cat:"新聞與媒體網站", color:"#5F52A0"}, ago:"1 天",
+ title:"漁電共生卡住的，有時候不是技術問題",
+ body:"沿海漁村的供電設施，很多是幾十年來隨著養殖需求一支一支拉起來的。等到案場進入漁電共生審查，才發現部分既存設施與現行土地使用管制對不上，於是衍生出補程序、甚至要求調整的討論。對在地漁民來說，爭議常常不在光電板本身，而在這些行政細節到底由誰負責、要處理多久。制度跟不上現場，往往比技術問題更難解。",
+ imgs:["images_posts/img_15.jpg"]},
+{id:17, source:"ai", correctness:"correct", imgType:"ai", facet:"complexity",
+ poster:{name:"能源科技研究室", kind:"page", cat:"科學與技術", color:"#1F7A8C"}, ago:"2 天",
+ title:"光電板下面，魚要怎麼養？",
+ body:"這個問題的關鍵，常常在於機具進不進得去。魚塭收成需要動用怪手和吊車，如果立柱太密、架得太矮，作業空間就被壓縮，漁民自然不願意配合。因此案場在設計階段會把立柱架高、跨距拉開，池邊也保留機具進出與停放的空間。不過這些配置多半來自養殖現場累積的實務建議，並不是全國統一的法定規格，各案場的條件仍有落差。",
+ imgs:["ai_images/guide_17.png"]},
+{id:19, source:"ai", correctness:"flawed", imgType:"none", facet:"perspective",
+ poster:{name:"黃志豪", kind:"person"}, ago:"7 小時",
+ title:"說好的遮蔽率40%呢？",
+ body:"當初審查講得多好聽，遮蔽率上限四成，板子底下照樣養得出東西。現在去沿海走一趟就知道，一口一口的魚塭，水面被蓋得密密麻麻，哪來的四成？連對岸做漁光互補都規定不能超過四成，我們反而放給業者做到滿。魚塭租一租、板子架一架，剩下沒地方養的漁民怎麼辦？沒有人出聲，過幾年就變成理所當然了😢",
+ imgs:[]},
+{id:21, source:"ai", correctness:"flawed", imgType:"human", facet:"inquiry",
+ poster:{name:"王麗華", kind:"person"}, ago:"1 小時",
+ title:"有人空拍傳出來，這就是現在的沿海",
+ body:"一望無際的良田、樹林和魚塭，一夕之間全被光電板覆蓋。這是有人空拍下來傳出來的，範圍大到看不到邊。鳥沒有地方停歇，水面反射著刺眼的光，大地在嗚咽。這些板子背後，是多少檯面下不能說的利益？現在喊缺電，等農地魚塭都變成這樣，未來缺的就是糧。悲哉！痛哉！",
+ imgs:["images_commons/img_21.png"]},
+{id:23, source:"ai", correctness:"flawed", imgType:"ai", facet:"skepticism",
+ poster:{name:"張國雄", kind:"person"}, ago:"40 分鐘",
+ title:"太可怕了！鳥喝了一口就倒下",
+ body:"看完真的心驚。有人本來在拍這隻漂亮的小鳥，結果錄到牠在光電板下的積水喝了兩口，不到幾秒就整隻翻過去不動了。鳥類神經傳導快，毒性反應也快，那水裡到底有什麼？沿海那些魚塭、蚵田旁邊就是一大片板子，下雨沖下來的水最後都流進池子。這段時間中南部的養殖魚和海鮮還是少碰吧，先轉給家人看，別為了省錢賠上健康。",
+ imgs:["ai_images/guide_23.png"]}
+];
+const FACETS = {
+  complexity:{label:"複雜性", text:"這件事還牽涉哪些面向與權衡？當成單一原因會漏掉什麼？"},
+  perspective:{label:"觀點取替", text:"誰會因此受益、誰受損？這則內容漏掉了誰的立場？"},
+  inquiry:{label:"探究", text:"要確認這個說法，還缺哪些資訊？該去哪裡找？"},
+  skepticism:{label:"懷疑", text:"這是誰產製的、為什麼現在出現？有沒有相反證據或利益關係？"}
+};
+/* 除錯說明用（含問題 6 則的查核結果） */
+const DEBRIEF = {
+  7:"光電板由玻璃、鋁框和矽晶片組成，破損不會流出有毒的「粉液」。查核單位判定為錯誤訊息。",
+  9:"查核發現，照片中文蛤死亡的池子其實沒有架設光電板。",
+  11:"光電板不會讓整個地區的氣溫升高。查核單位判定為錯誤訊息。",
+  19:"以兩岸案場照片對照遮蔽率的說法，經查核認定有誤導之虞。",
+  21:"這類流傳的空拍影片，經查核實際拍攝於中國廣東，不是台灣沿海。",
+  23:"原本流傳的小鳥影片，經查核是 AI 生成的假影片。"
+};
+
+/* ================= 審核選項（分類） ================= */
+/* 提醒理由／退回理由：由 reasons.js 載入（原專案的「理由設定.js」，用「理由編輯器.html」修改後複製過來）；檔案不存在時用下面的預設值 */
+const DEFAULT_REASON_CFG = {
+ "version": 1,
+ "warn": [
+  {
+   "cat": "內容與推論",
+   "items": [
+    {
+     "id": "cx1",
+     "label": "忽略了議題牽涉的其他面向或取捨（如環境、生計、成本）",
+     "ssr": "complexity",
+     "ai": false
+    },
+    {
+     "id": "cx2",
+     "label": "以個別案例或單一數字，推論成整體狀況",
+     "ssr": "complexity",
+     "ai": false
+    },
+    {
+     "id": "in2",
+     "label": "這個議題仍有未解的問題，內容卻當作已有定論",
+     "ssr": "inquiry",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "立場與來源",
+   "items": [
+    {
+     "id": "pt1",
+     "label": "只呈現單一立場，沒有交代其他看法",
+     "ssr": "perspective",
+     "ai": false
+    },
+    {
+     "id": "pt2",
+     "label": "沒有考慮到受議題影響的某些群體的處境",
+     "ssr": "perspective",
+     "ai": false
+    },
+    {
+     "id": "in1",
+     "label": "關鍵說法沒有附出處或數據，無法自行查證",
+     "ssr": "inquiry",
+     "ai": false
+    },
+    {
+     "id": "sk2",
+     "label": "發文者可能有立場或利益，內容像是經過挑選",
+     "ssr": "skepticism",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "表達方式",
+   "items": [
+    {
+     "id": "sk1",
+     "label": "用詞情緒化或誇大，可能在引導讀者的情緒",
+     "ssr": "skepticism",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "其他",
+   "items": [
+    {
+     "id": "w_disputed",
+     "label": "查核單位有不同結論",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "w_imgsrc",
+     "label": "圖片來源或拍攝地點不明",
+     "ssr": "",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "AI 生成",
+   "items": [
+    {
+     "id": "w_aitext",
+     "label": "文字可能由 AI 生成",
+     "ssr": "",
+     "ai": true
+    },
+    {
+     "id": "w_aiimg",
+     "label": "圖片可能由 AI 生成或經過修改",
+     "ssr": "",
+     "ai": true
+    }
+   ]
+  }
+ ],
+ "back": [
+  {
+   "cat": "不實或誤導",
+   "items": [
+    {
+     "id": "b_false",
+     "label": "內容與事實不符",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "b_mislead",
+     "label": "斷章取義、誤導讀者",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "b_mismatch",
+     "label": "圖文不符或移花接木",
+     "ssr": "",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "恐慌與對立",
+   "items": [
+    {
+     "id": "b_panic",
+     "label": "引起食安或健康恐慌",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "b_hostile",
+     "label": "煽動對立",
+     "ssr": "",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "內容與推論",
+   "items": [
+    {
+     "id": "cx1",
+     "label": "忽略了議題牽涉的其他面向或取捨（如環境、生計、成本）",
+     "ssr": "complexity",
+     "ai": false
+    },
+    {
+     "id": "cx2",
+     "label": "以個別案例或單一數字，推論成整體狀況",
+     "ssr": "complexity",
+     "ai": false
+    },
+    {
+     "id": "in2",
+     "label": "這個議題仍有未解的問題，內容卻當作已有定論",
+     "ssr": "inquiry",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "立場與來源",
+   "items": [
+    {
+     "id": "pt1",
+     "label": "只呈現單一立場，沒有交代其他看法",
+     "ssr": "perspective",
+     "ai": false
+    },
+    {
+     "id": "pt2",
+     "label": "沒有考慮到受議題影響的某些群體的處境",
+     "ssr": "perspective",
+     "ai": false
+    },
+    {
+     "id": "in1",
+     "label": "關鍵說法沒有附出處或數據，無法自行查證",
+     "ssr": "inquiry",
+     "ai": false
+    },
+    {
+     "id": "sk2",
+     "label": "發文者可能有立場或利益，內容像是經過挑選",
+     "ssr": "skepticism",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "表達方式",
+   "items": [
+    {
+     "id": "sk1",
+     "label": "用詞情緒化或誇大，可能在引導讀者的情緒",
+     "ssr": "skepticism",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "影像真實性",
+   "items": [
+    {
+     "id": "b_fakeimg",
+     "label": "疑似 AI 生成或變造的影像",
+     "ssr": "",
+     "ai": true
+    }
+   ]
+  },
+  {
+   "cat": "社團規範",
+   "items": [
+    {
+     "id": "b_offtopic",
+     "label": "與社團主題無關",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "b_ad",
+     "label": "廣告或宣傳",
+     "ssr": "",
+     "ai": false
+    }
+   ]
+  }
+ ]
+};
+const CFG = (window.REASON_CONFIG && window.REASON_CONFIG.warn && window.REASON_CONFIG.back) ? window.REASON_CONFIG : DEFAULT_REASON_CFG;
+function toCats(list){ return list.map(function(c){ return {cat:c.cat, items:c.items.map(function(it){ return [it.id, it.label]; })}; }); }
+const WARN_CATS = toCats(CFG.warn), BACK_CATS = toCats(CFG.back);
+/* 分析用：理由代碼對應的 SSR 面向、AI 相關理由（不顯示給受試者），隨資料匯出 */
+const REASON_MAP = {}, AI_REASONS = [], LABELS = {warn:{}, back:{}};
+['warn','back'].forEach(function(v){
+  CFG[v].forEach(function(c){ c.items.forEach(function(it){
+    LABELS[v][it.id] = it.label;
+    if (it.ssr && FACETS[it.ssr]) REASON_MAP[it.id] = it.ssr;
+    if (it.ai && AI_REASONS.indexOf(it.id) < 0) AI_REASONS.push(it.id);
+  }); });
+});
+function chipLabel(k, v){ return (LABELS[v] && LABELS[v][k]) || LABELS.warn[k] || LABELS.back[k] || k; }
+const VNAME = {pass:"放行", warn:"加註提醒後放行", back:"退回"};
+
+/* ================= 共用 ================= */
+const BY = {}; POSTS.forEach(function(p){ BY[p.id] = p; });
+const IMGPOSTS = POSTS.filter(function(p){ return p.imgs.length; });
+const params = new URLSearchParams(location.search);
+const DEV = params.get('dev') === '1';
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function byId(x){ return document.getElementById(x); }
+function shuffled(a){ a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function now(){ return new Date().toISOString(); }
+function store(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+let GROUP = params.get('group');
+if (GROUP !== 'treatment' && GROUP !== 'control') GROUP = Math.random() < .5 ? 'treatment' : 'control';
+
+const T_SEC = (function(){ const t = Number(params.get('t')); return (t >= 3 && t <= 120) ? t : FAST_SEC; })();
+const R = {
+  study:STUDY, session:Date.now().toString(36)+Math.random().toString(36).slice(2,8),
+  sid:null, group:GROUP, started:null, finished:null,
+  device:{w:window.innerWidth, h:window.innerHeight, ua:navigator.userAgent},
+  stage_times:{}, fast_time_limit_ms:T_SEC*1000, fast_order:null, fast:[], review_order:null, review:[]
+};
+function save(){ if (R.sid) store(STUDY+'_'+R.session, JSON.stringify(R)); }
+
+/* ================= 社團經營回饋 =================
+   回饋只跟「有沒有放行」有關，與正確性、撰寫來源無關：
+   放行與加註同一個分布，退回不扣成員（只漲不跌、含背景雜訊），
+   避免受試者從數字學到「讚多＝判斷對」。 */
+const COMM = { members:12418, today:0, likes:0, live:[], timers:[], running:false };
+function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
+function nf(n){ return n.toLocaleString('en-US'); }
+function flash(el){ el.classList.remove('up'); void el.offsetWidth; el.classList.add('up'); setTimeout(function(){ el.classList.remove('up'); }, 900); }
+function paintStats(){
+  byId('stMembers').textContent = nf(COMM.members);
+  byId('stToday').textContent = '+'+COMM.today;
+  byId('stLikes').textContent = nf(COMM.likes);
+}
+function addMembers(n){
+  if (n <= 0) return;
+  COMM.members += n; COMM.today += n;
+  paintStats(); flash(byId('stMembers')); flash(byId('stToday'));
+}
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(function(x){ x.remove(); });
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2700);
+}
+function commStart(){
+  if (COMM.running) return;
+  COMM.running = true;
+  R.community = { members_start:COMM.members, released:[] };
+  (function noise(){
+    if (!COMM.running) return;
+    if (Math.random() < .6) addMembers(1);
+    COMM.timers.push(setTimeout(noise, randInt(14000, 26000)));
+  })();
+  COMM.timers.push(setInterval(commTick, 1100));
+}
+function commStop(){
+  COMM.running = false;
+  COMM.timers.forEach(function(t){ clearTimeout(t); clearInterval(t); });
+  COMM.timers = [];
+  if (R.community){ R.community.members_end = COMM.members; R.community.likes_end = COMM.likes; }
+}
+function releasePost(p, verdict, reasons){
+  const item = { id:p.id, verdict:verdict, reasons:reasons, likes:0, cmts:0, shares:0,
+    target:{ likes:randInt(28,62), cmts:randInt(2,11), shares:randInt(1,7) }, born:performance.now() };
+  COMM.live.unshift(item);
+  R.community.released.push({id:p.id, target:item.target});
+  renderFeedItem(item, true);
+  byId('feedCount').textContent = COMM.live.length+' 則';
+  COMM.timers.push(setTimeout(function(){
+    const n = randInt(1,4);
+    addMembers(n);
+    toast('「'+p.title.slice(0,14)+(p.title.length>14?'…':'')+'」帶來 '+n+' 位新成員');
+  }, randInt(2500, 5000)));
+}
+/* 二次審核的最終處置套用到社團動態：退回＝移除，加註＝補上提醒，未放行過的＝放行 */
+function applyFinal(p, verdict, reasons){
+  const it = COMM.live.filter(function(x){ return x.id === p.id; })[0];
+  if (!it){ if (verdict !== 'back') releasePost(p, verdict, reasons); return; }
+  if (verdict === 'back'){ it.removed = true; }
+  else { it.verdict = verdict; it.reasons = reasons; }
+  const el = byId('fi-'+it.id);
+  if (el){ el.innerHTML = fitemHtml(it); el.classList.toggle('removed', !!it.removed); }
+}
+function commTick(){
+  COMM.live.forEach(function(it){
+    if (it.removed) return;
+    const age = (performance.now() - it.born)/1000;
+    if (age < 1.5) return;
+    let changed = false;
+    if (it.likes < it.target.likes && Math.random() < .75){
+      const d = Math.min(it.target.likes - it.likes, randInt(1,4));
+      it.likes += d; COMM.likes += d; changed = true;
+    }
+    if (it.cmts < it.target.cmts && Math.random() < .2){ it.cmts++; changed = true; }
+    if (it.shares < it.target.shares && Math.random() < .12){ it.shares++; changed = true; }
+    if (changed) renderFeedItem(it, false);
+  });
+  paintStats();
+}
+function fitemHtml(it){
+  const p = BY[it.id];
+  const age = Math.round((performance.now() - it.born)/60000);
+  return '<div class="fh">'+avHtml(p)+'<span>'+esc(p.poster.name)+'</span><small>'+(age < 1 ? '剛剛' : age+' 分鐘')+'</small></div>'
+    + '<div class="ft">'+esc(p.title)+'</div>'
+    + (it.removed ? '<div class="frm">已由你移除</div>'
+       : (it.verdict === 'warn' ? '<div class="fw">⚠ 管理員提醒：'+(it.reasons.length ? esc(it.reasons.map(function(k){ return chipLabel(k,'warn'); }).join('、')) : '請留意這則內容')+'</div>' : ''))
+    + '<div class="fc"><span>👍 <b class="fcnt" data-k="likes">'+it.likes+'</b></span><span>留言 <b class="fcnt" data-k="cmts">'+it.cmts+'</b></span><span>分享 <b class="fcnt" data-k="shares">'+it.shares+'</b></span></div>';
+}
+function renderFeedItem(it, isNew){
+  const list = byId('feedList');
+  if (isNew){
+    const empty = list.querySelector('.fempty'); if (empty) empty.remove();
+    const el = document.createElement('div');
+    el.className = 'fitem'; el.id = 'fi-'+it.id;
+    el.innerHTML = fitemHtml(it);
+    list.prepend(el);
+    return;
+  }
+  const el = byId('fi-'+it.id); if (!el) return;
+  el.querySelectorAll('.fcnt').forEach(function(c){
+    const v = String(it[c.dataset.k]);
+    if (c.textContent !== v){ c.textContent = v; flash(c); }
+  });
+  const age = Math.round((performance.now() - it.born)/60000);
+  el.querySelector('small').textContent = age < 1 ? '剛剛' : age+' 分鐘';
+}
+
+function avHtml(p){
+  const ch = esc(p.poster.name.slice(0,1));
+  return p.poster.kind === 'page'
+    ? '<div class="av page" style="background:'+p.poster.color+'">'+ch+'</div>'
+    : '<div class="av person">'+ch+'</div>';
+}
+function posterSub(p){
+  return p.poster.kind === 'page' ? '粉絲專頁・'+esc(p.poster.cat) : '社團成員';
+}
+function rtagsHtml(p){
+  return '<div class="rtags">'
+    + (p.correctness==='correct' ? '<span class="tag ok">正確</span>' : '<span class="tag bad">含問題</span>')
+    + (p.source==='human' ? '<span class="tag hum">人類撰寫</span>' : '<span class="tag rai">AI 撰寫</span>')
+    + '</div>';
+}
+function mediaHtml(p){
+  if (!p.imgs.length) return '';
+  return '<div class="media'+(p.imgs.length>1?' duo':'')+'">' + p.imgs.map(function(s){
+    return '<img src="'+esc(s)+'" alt="貼文附圖" onclick="openLightbox(this.src,'+p.id+')" onload="this.style.flexGrow=this.naturalWidth/this.naturalHeight" onerror="this.remove()">';
+  }).join('') + '</div>';
+}
+
+/* ================= 放大 ================= */
+let modalAssign = null;
+function openModal(id, zones, assignFn){
+  const p = BY[id];
+  byId('mhead').innerHTML = avHtml(p) + '<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div>'
+    + '<button class="btn x" onclick="closeModal()">關閉</button>';
+  byId('mbody').innerHTML = '<h3>'+esc(p.title)+'</h3><div class="full">'+esc(p.body)+'</div>'
+    + (p.imgs.length ? '<div class="mimgs">'+p.imgs.map(function(s){ return '<img src="'+esc(s)+'" alt="貼文附圖" onclick="openLightbox(this.src)" onerror="this.remove()">'; }).join('')+'</div>' : '');
+  const f = byId('mfoot');
+  if (zones){
+    modalAssign = assignFn;
+    f.innerHTML = zones.map(function(z){ return '<button class="btn" onclick="modalPick('+id+',\''+z.key+'\')">'+esc(z.label)+'</button>'; }).join('')
+      + '<button class="btn" onclick="modalPick('+id+',null)">判斷不出來</button>';
+  } else {
+    modalAssign = null;
+    f.innerHTML = '<button class="btn" onclick="closeModal()">關閉</button>';
+  }
+  byId('modal').hidden = false;
+}
+function modalPick(id, key){ if (modalAssign) modalAssign(id, key); closeModal(); }
+function closeModal(){ byId('modal').hidden = true; modalAssign = null; }
+byId('modal').addEventListener('click', function(e){ if (e.target === this) closeModal(); });
+function openLightbox(src, postId){
+  byId('lbimg').src = src; byId('lightbox').hidden = false;
+  if (postId && cur === 'fast' && FS.cur && FS.cur.id === postId) FS.cur.img_zoom++;
+  if (postId && cur === 'review' && RV.cur && RV.cur.id === postId) RV.cur.img_zoom++;
+}
+function closeLightbox(){ byId('lightbox').hidden = true; }
+byId('lightbox').addEventListener('click', closeLightbox);
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Escape') return;
+  if (!byId('lightbox').hidden) closeLightbox(); else if (!byId('modal').hidden) closeModal();
+});
+
+/* ================= 流程 ================= */
+const STEPS = ['start','brief','fast','mid','scaffold','review','end'];
+const WIDE = [];
+const PHASE = {fast:'第一輪', mid:'第一輪', scaffold:'二次審核', review:'二次審核'};
+let cur = 'start';
+function go(step){
+  document.querySelectorAll('.step').forEach(function(el){ el.hidden = true; });
+  cur = step;
+  byId('s-'+step).hidden = false;
+  byId('wrap').classList.toggle('wide', WIDE.indexOf(step) >= 0);
+  const duo = step === 'fast' || step === 'review';
+  byId('wrap').classList.toggle('duo', duo);
+  byId('feedPanel').hidden = !duo;
+  const showStats = ['brief','fast','mid','scaffold','review'].indexOf(step) >= 0;
+  ['statsBox','statsBox2','statsBox3'].forEach(function(id){ byId(id).hidden = !showStats; });
+  if (step === 'fast') commStart();
+  if (step === 'end'){ commStop(); if (!R.finished) R.finished = now(); }
+  byId('phase').textContent = PHASE[step] || '';
+  R.stage_times[step] = now();
+  if (DEV) byId('devJump').value = step;
+  window.scrollTo({top:0});
+  if (step === 'fast') fsStart();
+  if (step === 'review') rvStart();
+  if (step === 'end') renderEnd();
+  save();
+  /* 第一輪結束先送一次（中途離開也留得到第一輪），完成時再送完整版（試算表以 session 覆寫） */
+  if (step === 'mid') upload('fast_done');
+  if (step === 'end') upload('complete');
+}
+
+byId('sidInput').value = params.get('sid') || '';
+byId('btnStart').onclick = function(){
+  const v = byId('sidInput').value.trim();
+  R.sid = v || ('anon-'+Date.now().toString(36));
+  R.started = now();
+  go('brief');
+};
+byId('btnBrief').onclick = function(){ go('fast'); };
+byId('btnMid').onclick = function(){ go(GROUP === 'treatment' ? 'scaffold' : 'review'); };
+byId('btnScaffold').onclick = function(){ go('review'); };
+/* 作答中途關閉或重新整理前提醒（重新整理會從頭開始） */
+window.addEventListener('beforeunload', function(e){
+  if (R.started && cur !== 'end' && cur !== 'start' && !DEV){ e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ================= 第一輪：限時快速審核 =================
+   每則 10 秒，放行／加註提醒後放行／退回（與第二輪相同的三種處置）；
+   決定後計時停止，拉滑桿評信心（1–5，不限時）。第一輪不勾理由，理由只在第二輪收集。
+   時間到未決定記為 timeout，不評信心。鷹架不在這一輪出現。 */
+const FS = { order:null, i:0, cur:null, raf:null, deadline:0 };
+function fsStart(){
+  if (FS.order) return;
+  FS.order = shuffled(POSTS).map(function(p){ return p.id; });
+  R.fast_order = FS.order.slice();
+  FS.i = 0;
+  fsRender();
+}
+function fsRender(){
+  if (FS.i >= FS.order.length){ go('mid'); return; }
+  const p = BY[FS.order[FS.i]];
+  const left = FS.order.length - FS.i;
+  byId('fsCount').innerHTML = '<span class="flood"><i></i>新貼文持續送審中</span>　待審 '+left+' 則';
+  byId('fsBar').style.width = (FS.i/FS.order.length*100)+'%';
+  FS.cur = { id:p.id, position:FS.i+1, shown_at:now(), t0:performance.now(), img_zoom:0 };
+  byId('fsStage').innerHTML =
+    '<div class="queue fastq">'
+    + '<div class="tbar" id="fsTbar"><i></i></div>'
+    + '<div class="qhead"><span>待審貼文</span><span class="right tsec" id="fsSec">'+T_SEC+'</span></div>'
+    + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
+    + rtagsHtml(p)
+    + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
+    + mediaHtml(p)
+    + '<div class="decide" id="fsDecide">'
+    +   '<div class="vbtns fast3">'
+    +     '<button class="vbtn pass" data-v="pass">放行</button>'
+    +     '<button class="vbtn warn" data-v="warn">加註提醒<br>後放行</button>'
+    +     '<button class="vbtn back" data-v="back">退回</button>'
+    +   '</div>'
+    + '</div></div>';
+  byId('fsStage').querySelectorAll('.vbtn').forEach(function(b){ b.onclick = function(){ fsDecide(b.dataset.v); }; });
+  FS.deadline = FS.cur.t0 + R.fast_time_limit_ms;
+  fsTick();
+  window.scrollTo({top:0});
+}
+function fsTick(){
+  const rem = FS.deadline - performance.now();
+  const bar = byId('fsTbar'), sec = byId('fsSec');
+  if (!bar) return;
+  const frac = Math.max(0, rem / R.fast_time_limit_ms);
+  bar.firstChild.style.transform = 'scaleX('+frac+')';
+  sec.textContent = Math.max(0, Math.ceil(rem/1000));
+  const low = rem < 3000;
+  bar.classList.toggle('low', low); sec.classList.toggle('low', low);
+  if (rem <= 0){ fsTimeout(); return; }
+  FS.raf = requestAnimationFrame(fsTick);
+}
+function fsStopTimer(){ if (FS.raf) cancelAnimationFrame(FS.raf); FS.raf = null; }
+function fsTimeout(){
+  fsStopTimer();
+  fsSave({ verdict:'timeout', rt_ms:null, confidence:null, conf_ms:null, conf_adjust:0 });
+  byId('fsDecide').innerHTML = '<div class="timeup">時間到，這則先跳過</div>';
+  setTimeout(fsNext, 1000);
+}
+function fsDecide(v){
+  fsStopTimer();
+  const rt = Math.round(performance.now() - FS.cur.t0);
+  FS.cur.verdict = v; FS.cur.rt_ms = rt;
+  if (v === 'pass') releasePost(BY[FS.cur.id], 'pass', []);
+  const tConf = performance.now();
+  let adjust = 0;
+  const dec = byId('fsDecide');
+  dec.classList.add('done');
+  dec.innerHTML = '<div class="conf">'
+    + '<p class="chosen">你選了：'+VNAME[v]+'</p>'
+    + '<p class="lab">你對這個決定有多少把握？</p>'
+    + '<input type="range" min="1" max="5" step="1" value="3" class="untouched" id="confR" aria-label="把握程度 1 到 5">'
+    + '<div class="conftick">'+[1,2,3,4,5].map(function(n){ return '<span data-n="'+n+'" style="left:'+((n-1)*25)+'%">'+n+'</span>'; }).join('')+'</div>'
+    + '<div class="confends"><span>完全沒把握</span><span>非常有把握</span></div>'
+    + '<div class="qfoot"><span class="hint" id="confHint"></span><button class="btn primary" id="confOk" disabled>下一則</button></div>'
+    + '</div>';
+  const r = byId('confR');
+  function check(){
+    const slid = !r.classList.contains('untouched');
+    byId('confOk').disabled = !slid;
+    byId('confHint').textContent = slid ? '把握程度：'+r.value : '拉動滑桿';
+    dec.querySelectorAll('.conftick span').forEach(function(t){ t.classList.toggle('on', slid && t.dataset.n === r.value); });
+  }
+  function touched(){ adjust++; r.classList.remove('untouched'); check(); }
+  r.addEventListener('input', touched);
+  r.addEventListener('pointerdown', function(){ if (r.classList.contains('untouched')) touched(); });
+  check();
+  byId('confOk').onclick = function(){
+    if (v === 'warn') releasePost(BY[FS.cur.id], 'warn', []);
+    fsSave({ verdict:v, rt_ms:rt, confidence:Number(r.value), conf_ms:Math.round(performance.now()-tConf), conf_adjust:adjust });
+    fsNext();
+  };
+}
+function fsSave(extra){
+  const rec = Object.assign({ id:FS.cur.id, position:FS.cur.position, shown_at:FS.cur.shown_at, img_zoom:FS.cur.img_zoom,
+    members_at_decision:COMM.members, likes_at_decision:COMM.likes }, extra);
+  R.fast.push(rec);
+  save();
+}
+function fsNext(){ FS.i++; fsRender(); }
+function fastOf(id){ return R.fast.filter(function(x){ return x.id === id; })[0] || null; }
+
+/* ================= 審核任務 ================= */
+const RV = { order:null, i:0, cur:null, verdict:null, chips:[] };
+function rvStart(){
+  if (RV.order) return;
+  RV.order = shuffled(POSTS).map(function(p){ return p.id; });
+  R.review_order = RV.order.slice();
+  RV.i = 0;
+  rvRender();
+}
+function prevRoundText(id){
+  const f = fastOf(id);
+  if (!f || f.verdict === 'timeout') return '第一輪：時間到未決定';
+  return '第一輪：' + VNAME[f.verdict];
+}
+function rvRender(){
+  if (RV.i >= RV.order.length){ go('end'); return; }
+  const p = BY[RV.order[RV.i]];
+  byId('rvCount').textContent = '二次審核 '+(RV.i+1)+' / '+RV.order.length;
+  byId('rvBar').style.width = (RV.i/RV.order.length*100)+'%';
+  RV.verdict = null; RV.chips = [];
+  RV.cur = { id:p.id, position:RV.i+1, shown_at:now(), t0:performance.now(), first_click_ms:null,
+             verdict_changes:[], chip_toggles:0, img_zoom:0 };
+  const f = FACETS[p.facet];
+  byId('rvStage').innerHTML =
+    '<div class="queue">'
+    + '<div class="qhead"><span>二次審核</span><span class="right prevround">'+prevRoundText(p.id)+'</span></div>'
+    + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
+    + rtagsHtml(p)
+    + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
+    + mediaHtml(p)
+    + (GROUP === 'treatment' ? '<div class="ssrline"><b>'+esc(f.label)+'</b>'+esc(f.text)+'</div>' : '')
+    + '<div class="decide">'
+    +   '<div class="vbtns">'
+    +     '<button class="vbtn pass" data-v="pass" aria-pressed="false">放行</button>'
+    +     '<button class="vbtn warn" data-v="warn" aria-pressed="false">加註提醒後放行</button>'
+    +     '<button class="vbtn back" data-v="back" aria-pressed="false">退回</button>'
+    +   '</div>'
+    +   '<div id="rvSub"></div>'
+    +   '<div class="qfoot"><span class="hint" id="rvHint"></span><button class="btn primary" id="rvSubmit" disabled>送出</button></div>'
+    + '</div></div>';
+  byId('rvStage').querySelectorAll('.vbtn').forEach(function(b){ b.onclick = function(){ rvPick(b.dataset.v); }; });
+  byId('rvSubmit').onclick = rvSubmit;
+}
+/* 研究者模式：在理由旁標出對應的 SSR 面向（受試者畫面不出現） */
+function ssrTag(k){
+  if (!DEV) return '';
+  const f = REASON_MAP[k];
+  return f ? '<span class="ssrtag">'+FACETS[f].label+' '+k.toUpperCase()+'</span>' : '<span class="ssrtag none">其他</span>';
+}
+function rvPick(v){
+  const ms = Math.round(performance.now() - RV.cur.t0);
+  if (RV.cur.first_click_ms === null) RV.cur.first_click_ms = ms;
+  if (v === RV.verdict) return;
+  RV.cur.verdict_changes.push({v:v, ms:ms});
+  RV.verdict = v; RV.chips = [];
+  byId('rvStage').querySelectorAll('.vbtn').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.v===v)); });
+  const sub = byId('rvSub');
+  if (v === 'pass'){ sub.innerHTML = ''; rvCheck(); return; }
+  const cats = v === 'warn' ? WARN_CATS : BACK_CATS;
+  sub.innerHTML = '<div class="subform">'
+    + '<p class="lab">'+(v==='warn' ? '要加註哪些提醒？（可複選）' : '退回理由（可複選）')+'</p>'
+    + cats.map(function(c){
+        return '<div class="cat"><span class="cn">'+esc(c.cat)+'</span><div class="chips">'
+          + c.items.map(function(it){ return '<button class="chip" data-k="'+it[0]+'" aria-pressed="false">'+esc(it[1])+ssrTag(it[0])+'</button>'; }).join('')
+          + '</div></div>';
+      }).join('')
+    + (v==='warn' ? '<div class="labelprev" id="rvPrev" hidden></div>' : '')
+    + '<textarea id="rvText" rows="2" placeholder="'+(v==='warn' ? '補充說明（成員會看到，可不填）' : '給作者的話（可不填）')+'"></textarea>'
+    + '</div>';
+  sub.querySelectorAll('.chip').forEach(function(c){
+    c.onclick = function(){
+      const k = c.dataset.k, i = RV.chips.indexOf(k);
+      if (i >= 0) RV.chips.splice(i,1); else RV.chips.push(k);
+      c.setAttribute('aria-pressed', String(i < 0));
+      RV.cur.chip_toggles++;
+      rvCheck();
+    };
+  });
+  if (v === 'warn') byId('rvText').addEventListener('input', rvCheck);
+  rvCheck();
+}
+function rvCheck(){
+  const ok = RV.verdict === 'pass' || RV.chips.length > 0;
+  byId('rvSubmit').disabled = !ok;
+  byId('rvHint').textContent = (RV.verdict && !ok) ? '至少選一項' : '';
+  const prev = byId('rvPrev');
+  if (prev){
+    const extra = byId('rvText').value.trim();
+    prev.hidden = !RV.chips.length;
+    prev.innerHTML = '<small>成員會看到</small>⚠ 管理員提醒：'
+      + esc(RV.chips.map(function(k){ return chipLabel(k,'warn'); }).join('、'))
+      + (extra ? '<br>'+esc(extra) : '');
+  }
+}
+function rvSubmit(){
+  const ta = byId('rvText');
+  const p = BY[RV.cur.id];
+  const rec = Object.assign({}, RV.cur, {
+    verdict:RV.verdict, reasons:RV.chips.slice(), note: ta ? ta.value.trim() : '',
+    decision_ms: Math.round(performance.now() - RV.cur.t0),
+    facet_shown: GROUP === 'treatment' ? p.facet : null,
+    members_at_submit: COMM.members, likes_at_submit: COMM.likes
+  });
+  const f = fastOf(p.id);
+  rec.stage1_verdict = f ? f.verdict : 'timeout';
+  rec.stage1_confidence = f ? f.confidence : null;
+  rec.held = rec.verdict !== 'pass';
+  /* 兩輪都是三種處置：changed＝處置不同；shift＝嚴格度變化（放行 0／加註 1／退回 2，第二輪減第一輪） */
+  const LV = {pass:0, warn:1, back:2};
+  rec.changed = rec.stage1_verdict === 'timeout' ? null : rec.stage1_verdict !== rec.verdict;
+  rec.shift = rec.stage1_verdict === 'timeout' ? null : LV[rec.verdict] - LV[rec.stage1_verdict];
+  delete rec.t0;
+  R.review.push(rec);
+  applyFinal(p, rec.verdict, rec.reasons);
+  save();
+  RV.i++;
+  rvRender();
+  window.scrollTo({top:0});
+}
+
+/* ================= 完成與匯出 ================= */
+function payload(){
+  return JSON.stringify(Object.assign({}, R, {
+    reason_map: REASON_MAP,
+    ai_reasons: AI_REASONS,
+    reason_config: CFG,
+    truth: POSTS.map(function(p){ return {id:p.id, correctness:p.correctness, source:p.source, imgType:p.imgType, poster_kind:p.poster.kind}; })
+  }), null, 2);
+}
+
+/* ================= 上傳到 Google 試算表 =================
+   以 text/plain 送出（不觸發 CORS 預檢）。participants 表一人一列（以 session 覆寫），
+   trials 表一人 12 列（每則貼文一列，完成時才寫）。失敗時顯示下載／複製備援。 */
+function trialRows(){
+  return POSTS.map(function(p){
+    const f = fastOf(p.id) || {}, r = R.review.filter(function(x){ return x.id === p.id; })[0] || {};
+    const reasons = r.reasons || [];
+    return {
+      post_id:p.id, correctness:p.correctness, source:p.source, img_type:p.imgType, poster_kind:p.poster.kind, facet:p.facet,
+      fast_position:f.position, fast_verdict:f.verdict, fast_rt_ms:f.rt_ms, fast_confidence:f.confidence,
+      fast_conf_ms:f.conf_ms, fast_conf_adjust:f.conf_adjust, fast_img_zoom:f.img_zoom,
+      rv_position:r.position, rv_verdict:r.verdict, rv_reasons:reasons.join('|'),
+      rv_reason_ssr:reasons.map(function(k){ return REASON_MAP[k] || 'other'; }).join('|'),
+      rv_reason_ai:reasons.filter(function(k){ return AI_REASONS.indexOf(k) >= 0; }).length,
+      rv_note:r.note, rv_first_click_ms:r.first_click_ms, rv_decision_ms:r.decision_ms,
+      rv_verdict_changes:r.verdict_changes ? r.verdict_changes.length : null,
+      rv_chip_toggles:r.chip_toggles, rv_img_zoom:r.img_zoom, rv_facet_shown:r.facet_shown,
+      changed:r.changed, shift:r.shift
+    };
+  });
+}
+function upload(stage){
+  if (!/^https:\/\/script\.google\.com\//.test(GAS_URL)){ upDone(false, '尚未設定 GAS_URL'); return Promise.resolve(false); }
+  const done = R.fast.filter(function(x){ return x.verdict !== 'timeout'; });
+  const body = JSON.stringify({
+    stage:stage, study:STUDY, session:R.session, sid:R.sid, group:R.group, dev:DEV,
+    started:R.started, finished:R.finished, time_limit_s:T_SEC,
+    n_fast:R.fast.length, n_timeout:R.fast.length - done.length,
+    mean_conf: done.length ? +(done.reduce(function(s,x){ return s + x.confidence; }, 0)/done.length).toFixed(2) : '',
+    n_review:R.review.length, n_changed:R.review.filter(function(x){ return x.changed; }).length,
+    screen:R.device.w+'x'+R.device.h, ua:R.device.ua,
+    trials: stage === 'complete' ? trialRows() : null,
+    raw: payload()
+  });
+  let tries = 0;
+  function attempt(){
+    tries++;
+    return fetch(GAS_URL, { method:'POST', body:body })
+      .then(function(res){ return res.json(); })
+      .then(function(j){ if (!j || !j.ok) throw new Error(j && j.error || 'bad response'); if (stage === 'complete') upDone(true); return true; })
+      .catch(function(err){
+        if (tries < 3) return new Promise(function(ok){ setTimeout(ok, 1500*tries); }).then(attempt);
+        if (stage === 'complete') upDone(false, String(err));
+        return false;
+      });
+  }
+  return attempt();
+}
+function upDone(ok, err){
+  const msg = byId('upMsg'); if (!msg) return;
+  if (ok){ msg.textContent = '作答紀錄已送出，可以關閉這個頁面了。'; byId('upFallback').hidden = true; return; }
+  msg.textContent = '作答紀錄沒有送出成功（可能是網路問題）。請按「重新送出」；若還是不行，請按「下載作答紀錄」，把檔案交給研究人員。';
+  byId('upFallback').hidden = false;
+  if (DEV && err) msg.textContent += '（'+err+'）';
+}
+byId('btnRetry').onclick = function(){ byId('upMsg').textContent = '重新送出中…'; upload('complete'); };
+byId('btnExport').onclick = function(){
+  const url = URL.createObjectURL(new Blob([payload()], {type:'application/json'}));
+  const a = document.createElement('a');
+  a.href = url; a.download = STUDY+'_'+R.sid+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+};
+byId('btnCopy').onclick = function(){
+  const msg = byId('copymsg');
+  try{ navigator.clipboard.writeText(payload()).then(function(){ msg.textContent = '已複製'; }, function(){ msg.textContent = '無法複製，請改用下載'; }); }
+  catch(e){ msg.textContent = '無法複製，請改用下載'; }
+};
+function fastCell(id){
+  const f = fastOf(id);
+  if (!f) return '—';
+  if (f.verdict === 'timeout') return '<span class="tag un">逾時</span>';
+  return esc(VNAME[f.verdict]) + ' <small>'+(f.rt_ms/1000).toFixed(1)+'s／'+f.confidence+'</small>';
+}
+function renderEnd(){
+  const block = byId('revealBlock');
+  if (!DEV){ block.innerHTML = ''; return; }
+  let hit=0, miss=0, fa=0, cr=0;
+  const rows = POSTS.map(function(p){
+    const r = R.review.filter(function(x){ return x.id === p.id; })[0];
+    const held = r && r.verdict !== 'pass';
+    if (r){ if (p.correctness==='flawed'){ if (held) hit++; else miss++; } else { if (r.verdict==='back') fa++; else cr++; } }
+    return '<tr><td>#'+p.id+'</td><td>'+(p.correctness==='correct'?'正確':'含問題')+'／'+(p.source==='human'?'人':'AI')+'／'+({none:'無圖',human:'真實圖',ai:'AI圖'})[p.imgType]+'</td>'
+      + '<td>'+fastCell(p.id)+'</td>'
+      + '<td>'+(r ? esc(VNAME[r.verdict])+(r.reasons.length?'<br><small>'+esc(r.reasons.map(function(k){ return chipLabel(k, r.verdict); }).join('、'))+'</small>':'') : '—')+'</td>'
+      + '<td>'+(r ? (r.decision_ms/1000).toFixed(1)+'s' : '')+'</td></tr>';
+  }).join('');
+  block.innerHTML = '<div class="reveal"><h4>研究者對照（僅 ?dev=1 顯示）</h4>'
+    + '<p style="font-size:.8rem;color:var(--ink-2)">含問題被攔下（加註或退回）'+hit+'/'+(hit+miss)+'　正確被退回 '+fa+'/'+(fa+cr)+'　分組：'+(GROUP==='treatment'?'鷹架組':'對照組')+'　每則 '+T_SEC+' 秒</p>'
+    + '<div class="tblwrap"><table class="mini"><thead><tr><th>貼文</th><th>實際</th><th>第一輪（秒／把握）</th><th>二次審核</th><th>秒數</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+}
+
+/* ================= 研究者模式 ================= */
+if (DEV){
+  byId('devbar').hidden = false;
+  byId('devGroup').value = GROUP;
+  byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; if (cur === 'review') rvRender(); };
+  document.body.classList.add('dev-ssr');
+  byId('devSsr').onchange = function(e){ document.body.classList.toggle('dev-ssr', e.target.checked); };
+  byId('devTags').onchange = function(e){ document.body.classList.toggle('dev-tags', e.target.checked); };
+  byId('devJump').innerHTML = STEPS.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
+  byId('devSkip').onclick = function(){
+    byId('devJump').value = 'review';
+    byId('devJump').onchange({target:byId('devJump')});
+    if (GROUP === 'treatment') go('scaffold');
+  };
+  byId('devJump').onchange = function(e){
+    if (!R.sid){ R.sid = 'dev-'+Date.now().toString(36); R.started = now(); }
+    const s = e.target.value;
+    if (STEPS.indexOf(s) > STEPS.indexOf('fast') && R.fast.length < POSTS.length){
+      R.fast = POSTS.map(function(p,i){ return {id:p.id, position:i+1, verdict:['pass','warn','back','timeout'][i%4], rt_ms:i%4===3?null:4000, confidence:i%4===3?null:(i%5)+1, conf_ms:1500, conf_adjust:1, img_zoom:0}; });
+      FS.order = POSTS.map(function(p){ return p.id; }); FS.i = POSTS.length;
+    }
+    if (STEPS.indexOf(s) > STEPS.indexOf('review') && R.review.length < POSTS.length){
+      R.review = POSTS.map(function(p,i){ return {id:p.id, position:i+1, verdict:['pass','warn','back'][i%3], reasons:i%3?['in2']:[], note:'', decision_ms:5000, verdict_changes:[], chip_toggles:0, img_zoom:0}; });
+      RV.order = POSTS.map(function(p){ return p.id; }); RV.i = POSTS.length;
+    }
+    go(s);
+  };
+}
+</script>
+</body>
+</html>
