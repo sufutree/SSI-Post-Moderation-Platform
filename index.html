@@ -351,7 +351,9 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
     <div class="panel">
       <h2>你是這個社團的審核管理員</h2>
       <p>「台灣綠能生活討論區」有一萬兩千多位成員，來自全台各地，有住在南部沿海的養殖戶，也有關心電價、環境與食品安全的一般民眾。成員或粉專想在社團發文，都要先經過管理團隊審核，今晚輪到你值班。</p>
-      <p>「漁電共生」是在魚塭上方架設太陽能光電板，讓同一塊地可以一邊養殖水產、一邊發電。這個話題今天突然延燒，大量貼文同時湧進來。每一則的時間有限，你必須很快決定<b>放行</b>、<b>加註提醒後放行</b>或<b>退回</b>，時間到還沒決定的就先跳過。</p>
+      <p>「漁電共生」是在魚塭上方架設太陽能光電板，讓同一塊地可以一邊養殖水產、一邊發電。這個話題今天突然延燒，大量貼文同時湧進來，每一則你只有 <b class="tlimit">10</b> 秒可以決定：</p>
+      <p><b>放行</b>　沒有疑慮的貼文<br><b>加註提醒後放行</b>　有值得留意的地方，但沒有錯誤資訊<br><b>退回</b>　含有錯誤資訊</p>
+      <p>時間到還沒決定的就先跳過。</p>
       <p>每做一個決定，拉一下你對這個決定有多少把握。</p>
       <p>放行的貼文會立刻出現在社團動態，上方會顯示社團的成員數和今天的互動。貼文來源很多元，其中也有 AI 生成的內容，就跟一般社群平台一樣。</p>
       <button class="btn primary" id="btnBrief">開始</button>
@@ -370,7 +372,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
     <div class="panel">
       <h2>湧入的貼文暫時告一段落</h2>
       <p>現在有時間把剛剛的 12 則重新看一遍，這次不限時間。你可以維持剛才的決定，也可以改變。</p>
-      <p><b>放行</b>　出現在社團<br><b>加註提醒後放行</b>　出現在社團，下方附上你選的提醒<br><b>退回</b>　不出現，作者會收到你選的理由；已放行的會從社團動態移除</p>
+      <p><b>放行</b>　沒有疑慮的貼文；會出現在社團<br><b>加註提醒後放行</b>　有值得留意的地方，但沒有錯誤資訊；會出現在社團，下方附上你選的提醒<br><b>退回</b>　含有錯誤資訊；不會出現，作者會收到你選的理由，已放行的會從社團動態移除</p>
       <button class="btn primary" id="btnMid">開始二次審核</button>
     </div>
   </section>
@@ -789,6 +791,7 @@ const R = {
   stage_times:{}, fast_time_limit_ms:T_SEC*1000, fast_order:null, fast:[], review_order:null, review:[]
 };
 function save(){ if (R.sid) store(STUDY+'_'+R.session, JSON.stringify(R)); }
+document.querySelectorAll('.tlimit').forEach(function(el){ el.textContent = T_SEC; });
 
 /* ================= 社團經營回饋 =================
    回饋只跟「有沒有放行」有關，與正確性、撰寫來源無關：
@@ -1305,18 +1308,18 @@ function fastCell(id){
 function renderEnd(){
   const block = byId('revealBlock');
   if (!DEV){ block.innerHTML = ''; return; }
-  let hit=0, miss=0, fa=0, cr=0;
+  /* 判準：退回＝含錯誤資訊、加註＝有疑慮但無錯誤。含問題貼文只有「退回」算正確攔下，「加註」算部分辨識 */
+  let hit=0, part=0, miss=0, fa=0, cr=0;
   const rows = POSTS.map(function(p){
     const r = R.review.filter(function(x){ return x.id === p.id; })[0];
-    const held = r && r.verdict !== 'pass';
-    if (r){ if (p.correctness==='flawed'){ if (held) hit++; else miss++; } else { if (r.verdict==='back') fa++; else cr++; } }
+    if (r){ if (p.correctness==='flawed'){ if (r.verdict==='back') hit++; else if (r.verdict==='warn') part++; else miss++; } else { if (r.verdict==='back') fa++; else cr++; } }
     return '<tr><td>#'+p.id+'</td><td>'+(p.correctness==='correct'?'正確':'含問題')+'／'+(p.source==='human'?'人':'AI')+'／'+({none:'無圖',human:'真實圖',ai:'AI圖'})[p.imgType]+'</td>'
       + '<td>'+fastCell(p.id)+'</td>'
       + '<td>'+(r ? esc(VNAME[r.verdict])+(r.reasons.length?'<br><small>'+esc(r.reasons.map(function(k){ return chipLabel(k, r.verdict); }).join('、'))+'</small>':'') : '—')+'</td>'
       + '<td>'+(r ? (r.decision_ms/1000).toFixed(1)+'s' : '')+'</td></tr>';
   }).join('');
   block.innerHTML = '<div class="reveal"><h4>研究者對照（僅 ?dev=1 顯示）</h4>'
-    + '<p style="font-size:.8rem;color:var(--ink-2)">含問題被攔下（加註或退回）'+hit+'/'+(hit+miss)+'　正確被退回 '+fa+'/'+(fa+cr)+'　分組：'+(GROUP==='treatment'?'鷹架組':'對照組')+'　每則 '+T_SEC+' 秒</p>'
+    + '<p style="font-size:.8rem;color:var(--ink-2)">含問題：退回 '+hit+'・加註 '+part+'・放行 '+miss+'（共 '+(hit+part+miss)+'）　正確被退回 '+fa+'/'+(fa+cr)+'　分組：'+(GROUP==='treatment'?'鷹架組':'對照組')+'　每則 '+T_SEC+' 秒</p>'
     + '<div class="tblwrap"><table class="mini"><thead><tr><th>貼文</th><th>實際</th><th>第一輪（秒／把握）</th><th>二次審核</th><th>秒數</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 
