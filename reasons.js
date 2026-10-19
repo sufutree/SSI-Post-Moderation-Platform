@@ -23,6 +23,24 @@ window.REASON_CONFIG = {
      "label": "這個議題仍有未解的問題，內容卻當作已有定論",
      "ssr": "inquiry",
      "ai": false
+    },
+    {
+     "id": "n_old",
+     "label": "資訊可能已經過時",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_title",
+     "label": "標題和內文的重點不太一致",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_jargon",
+     "label": "專有名詞沒有解釋，一般人容易誤解",
+     "ssr": "",
+     "ai": false
     }
    ]
   },
@@ -52,6 +70,24 @@ window.REASON_CONFIG = {
      "label": "發文者可能有立場或利益，內容像是經過挑選",
      "ssr": "skepticism",
      "ai": false
+    },
+    {
+     "id": "n_anon",
+     "label": "看不出發文者是誰或有什麼背景",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_repost",
+     "label": "轉傳內容，看不出最早是誰發的",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_promo",
+     "label": "看起來像業配或宣傳文",
+     "ssr": "",
+     "ai": false
     }
    ]
   },
@@ -62,6 +98,30 @@ window.REASON_CONFIG = {
      "id": "sk1",
      "label": "用詞情緒化或誇大，可能在引導讀者的情緒",
      "ssr": "skepticism",
+     "ai": false
+    },
+    {
+     "id": "n_clickbait",
+     "label": "標題聳動，像是農場文",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_messy",
+     "label": "內容太長或太雜，重點不清楚",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_typo",
+     "label": "錯字多或語句不通順",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_sarcasm",
+     "label": "語氣嘲諷或帶有攻擊性",
+     "ssr": "",
      "ai": false
     }
    ]
@@ -162,6 +222,24 @@ window.REASON_CONFIG = {
      "label": "這個議題仍有未解的問題，內容卻當作已有定論",
      "ssr": "inquiry",
      "ai": false
+    },
+    {
+     "id": "n_old",
+     "label": "資訊可能已經過時",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_title",
+     "label": "標題和內文的重點不太一致",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_jargon",
+     "label": "專有名詞沒有解釋，一般人容易誤解",
+     "ssr": "",
+     "ai": false
     }
    ]
   },
@@ -191,6 +269,24 @@ window.REASON_CONFIG = {
      "label": "發文者可能有立場或利益，內容像是經過挑選",
      "ssr": "skepticism",
      "ai": false
+    },
+    {
+     "id": "n_anon",
+     "label": "看不出發文者是誰或有什麼背景",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_repost",
+     "label": "轉傳內容，看不出最早是誰發的",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_promo",
+     "label": "看起來像業配或宣傳文",
+     "ssr": "",
+     "ai": false
     }
    ]
   },
@@ -201,6 +297,30 @@ window.REASON_CONFIG = {
      "id": "sk1",
      "label": "用詞情緒化或誇大，可能在引導讀者的情緒",
      "ssr": "skepticism",
+     "ai": false
+    },
+    {
+     "id": "n_clickbait",
+     "label": "標題聳動，像是農場文",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_messy",
+     "label": "內容太長或太雜，重點不清楚",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_typo",
+     "label": "錯字多或語句不通順",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_sarcasm",
+     "label": "語氣嘲諷或帶有攻擊性",
+     "ssr": "",
      "ai": false
     }
    ]

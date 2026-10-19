@@ -7,11 +7,13 @@
  * trials：一人 12 列（每則貼文一列），只在完成時寫入
  */
 const P_COLS = ['received_at','stage','study','session','sid','group','dev','started','finished','time_limit_s',
-  'n_fast','n_timeout','mean_conf','n_review','n_changed','screen','ua','raw_json'];
+  'n_fast','n_timeout','mean_conf','n_review','n_changed','screen','ua','raw_json',
+  'ssr_reasons','time_limits','n_other'];
 const T_COLS = ['session','sid','group','dev','time_limit_s','post_id','correctness','source','img_type','poster_kind','facet',
   'fast_position','fast_verdict','fast_rt_ms','fast_confidence','fast_conf_ms','fast_conf_adjust','fast_img_zoom',
   'rv_position','rv_verdict','rv_reasons','rv_reason_ssr','rv_reason_ai','rv_note','rv_first_click_ms','rv_decision_ms',
-  'rv_verdict_changes','rv_chip_toggles','rv_img_zoom','rv_facet_shown','changed','shift'];
+  'rv_verdict_changes','rv_chip_toggles','rv_img_zoom','rv_facet_shown','changed','shift',
+  'fast_limit_s','rv_other'];
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
@@ -48,7 +50,9 @@ function doGet() { return json_({ok: true, msg: 'fish12 pretest endpoint'}); }
 
 function sheet_(ss, name, cols) {
   let s = ss.getSheetByName(name);
-  if (!s) { s = ss.insertSheet(name); s.appendRow(cols); s.setFrozenRows(1); }
+  if (!s) { s = ss.insertSheet(name); s.setFrozenRows(1); }
+  /* 新增欄位都接在最後面，舊資料不會錯位；每次寫入時把標題列補齊 */
+  s.getRange(1, 1, 1, cols.length).setValues([cols]);
   return s;
 }
 function hasTrials_(ss, session) {

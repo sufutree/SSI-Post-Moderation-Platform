@@ -301,6 +301,19 @@ body.dev-ssr .ssrtag{display:inline}
 
 /* ---------- 研究者對照 ---------- */
 .reveal{margin-top:1rem;border-top:1px dashed var(--line);padding-top:.9rem}
+.setup .hint{font-size:.8rem;color:var(--ink-3);margin-bottom:.8rem}
+.setup .srow{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .9rem;padding:.55rem 0;border-top:1px solid var(--line-2);font-size:.86rem}
+.setup .srow > b{min-width:6.5rem;font-weight:500}
+.setup .srow input[type=range]{flex:1;min-width:8rem;accent-color:var(--brand)}
+.setup .srow input[type=text]{flex:1;min-width:10rem;font-size:.86rem;padding:.35rem .5rem;border:1px solid var(--line);border-radius:6px}
+.setup .sval{min-width:3.2rem;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--brand)}
+.setup details{padding:.3rem 0 .6rem;font-size:.84rem}
+.setup summary{cursor:pointer;color:var(--brand);padding:.3rem 0}
+.setup .sitem{display:grid;grid-template-columns:1fr minmax(6rem,10rem) 3.2rem;gap:.6rem;align-items:center;padding:.3rem 0;border-bottom:1px dashed var(--line-2)}
+.setup .sitem .st{font-size:.8rem;line-height:1.35;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.setup .sitem .st small{color:var(--ink-3);margin-right:.3rem}
+.setup .sitem.diff .sval{color:var(--warn)}
+.setup .surl{margin:.8rem 0;padding:.6rem .7rem;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;font-size:.78rem;word-break:break-all;font-family:ui-monospace,Consolas,monospace}
 .reveal h4{font-size:.8rem;color:var(--bad);margin-bottom:.5rem}
 .tblwrap{overflow-x:auto}
 table.mini{width:100%;border-collapse:collapse;font-size:.76rem;min-width:34rem}
@@ -346,12 +359,37 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
     </div>
   </section>
 
+  <!-- 研究者：施測設定（?setup=1，受試者不會看到） -->
+  <section class="step" id="s-setup" hidden>
+    <div class="panel setup">
+      <h2>施測設定</h2>
+      <p class="hint">調好後複製下面的網址發給受試者。設定都存在網址裡，不同人可以用不同條件。</p>
+      <div class="srow"><b>全部貼文秒數</b><input type="range" id="suAll" min="3" max="60" step="1"><span class="sval" id="suAllV"></span></div>
+      <details id="suEach"><summary>個別調整每則秒數</summary>
+        <div id="suList"></div>
+        <button type="button" class="btn" id="suReset">全部回到上面的秒數</button>
+      </details>
+      <div class="srow"><b>分組</b>
+        <label><input type="radio" name="suGroup" value="control" checked> 對照組（不給鷹架）</label>
+        <label><input type="radio" name="suGroup" value="treatment"> 鷹架組</label></div>
+      <div class="srow"><b>審核理由</b>
+        <label><input type="checkbox" id="suSsr" checked> 顯示 SSR 面向的理由</label></div>
+      <div class="srow"><b>受試者編號</b><input type="text" id="suSid" placeholder="可不填，讓受試者自己輸入"></div>
+      <div class="surl" id="suUrl"></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+        <button class="btn primary" id="suCopy">複製網址</button>
+        <a class="btn" id="suOpen" target="_blank" rel="noopener">開新分頁試做</a>
+        <span id="suMsg" style="font-size:.78rem;color:var(--ok)"></span>
+      </div>
+    </div>
+  </section>
+
   <!-- 情境 -->
   <section class="step" id="s-brief" hidden>
     <div class="panel">
       <h2>你是這個社團的審核管理員</h2>
       <p>「台灣綠能生活討論區」有一萬兩千多位成員，來自全台各地，有住在南部沿海的養殖戶，也有關心電價、環境與食品安全的一般民眾。成員或粉專想在社團發文，都要先經過管理團隊審核，今晚輪到你值班。</p>
-      <p>「漁電共生」是在魚塭上方架設太陽能光電板，讓同一塊地可以一邊養殖水產、一邊發電。這個話題今天突然延燒，大量貼文同時湧進來，每一則你只有 <b class="tlimit">10</b> 秒可以決定：</p>
+      <p>「漁電共生」是在魚塭上方架設太陽能光電板，讓同一塊地可以一邊養殖水產、一邊發電。這個話題今天突然延燒，大量貼文同時湧進來，每一則你<span class="tl-same">只有 <b class="tlimit">10</b> 秒</span><span class="tl-var" hidden>只有幾秒鐘</span>可以決定：</p>
       <p><b>放行</b>　沒有疑慮的貼文<br><b>加註提醒後放行</b>　有值得留意的地方，但沒有錯誤資訊<br><b>退回</b>　含有錯誤資訊</p>
       <p>時間到還沒決定的就先跳過。</p>
       <p>每做一個決定，拉一下你對這個決定有多少把握。</p>
@@ -431,7 +469,11 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
 <script>
 /* ================= 施測設定 =================
    GAS_URL：Google Apps Script 網頁應用程式網址（部署後貼上，見 README）
-   FAST_SEC：第一輪每則秒數；網址加 ?t=15 可臨時改成 15 秒（允許 3–120） */
+   FAST_SEC：第一輪每則預設秒數。施測條件都用網址參數設定，研究者可開 ?setup=1 用滑桿產生網址：
+     t=15            全部貼文 15 秒（3–120）
+     tp=7:6,19:20    個別貼文秒數（貼文 id:秒數），沒列到的用 t
+     group=treatment 鷹架組（不填＝對照組）
+     ssr=0           審核理由不顯示 SSR 面向的選項 */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzHvEqq0uoveAuRUBrUHz9IH8hnbSyBIZJWzaLVAuKV9B-lDulhjf45frmw_K8R6EmZbA/exec';
 const FAST_SEC = 10;
 const STUDY = 'fish12_pretest_v1';
@@ -757,7 +799,7 @@ const CFG = (window.REASON_CONFIG && window.REASON_CONFIG.warn && window.REASON_
 function toCats(list){ return list.map(function(c){ return {cat:c.cat, items:c.items.map(function(it){ return [it.id, it.label]; })}; }); }
 const WARN_CATS = toCats(CFG.warn), BACK_CATS = toCats(CFG.back);
 /* 分析用：理由代碼對應的 SSR 面向、AI 相關理由（不顯示給受試者），隨資料匯出 */
-const REASON_MAP = {}, AI_REASONS = [], LABELS = {warn:{}, back:{}};
+const REASON_MAP = {}, AI_REASONS = [], LABELS = {warn:{other:'其他'}, back:{other:'其他'}};
 ['warn','back'].forEach(function(v){
   CFG[v].forEach(function(c){ c.items.forEach(function(it){
     LABELS[v][it.id] = it.label;
@@ -780,18 +822,36 @@ function now(){ return new Date().toISOString(); }
 function store(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
 function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 
-let GROUP = params.get('group');
-if (GROUP !== 'treatment' && GROUP !== 'control') GROUP = Math.random() < .5 ? 'treatment' : 'control';
+/* 預測驗預設全部是對照組（不給鷹架）；要看鷹架版加 ?group=treatment */
+let GROUP = params.get('group') === 'treatment' ? 'treatment' : 'control';
+/* 理由是否包含 SSR 面向的選項（ssr=0 只留非 SSR 理由＋「其他」，看受試者會不會自己寫出 SSR 理由） */
+const SSR_ON = params.get('ssr') !== '0';
 
-const T_SEC = (function(){ const t = Number(params.get('t')); return (t >= 3 && t <= 120) ? t : FAST_SEC; })();
+function okSec(x){ x = Number(x); return (x >= 3 && x <= 120) ? Math.round(x) : null; }
+const T_SEC = okSec(params.get('t')) || FAST_SEC;
+/* 每則貼文的秒數：tp=7:6,19:20 覆寫個別貼文，其餘用 T_SEC */
+const LIMITS = {};
+POSTS.forEach(function(p){ LIMITS[p.id] = T_SEC; });
+(params.get('tp') || '').split(',').forEach(function(s){
+  const kv = s.split(':'), id = Number(kv[0]), sec = okSec(kv[1]);
+  if (BY[id] && sec) LIMITS[id] = sec;
+});
+const LIMIT_VALUES = POSTS.map(function(p){ return LIMITS[p.id]; });
+const SAME_LIMIT = LIMIT_VALUES.every(function(x){ return x === LIMIT_VALUES[0]; });
+function limitMs(id){ return LIMITS[id]*1000; }
+
 const R = {
   study:STUDY, session:Date.now().toString(36)+Math.random().toString(36).slice(2,8),
-  sid:null, group:GROUP, started:null, finished:null,
+  sid:null, group:GROUP, ssr_reasons:SSR_ON, started:null, finished:null,
   device:{w:window.innerWidth, h:window.innerHeight, ua:navigator.userAgent},
-  stage_times:{}, fast_time_limit_ms:T_SEC*1000, fast_order:null, fast:[], review_order:null, review:[]
+  stage_times:{}, fast_time_limit_ms:T_SEC*1000, fast_time_limits:LIMITS,
+  fast_order:null, fast:[], review_order:null, review:[]
 };
 function save(){ if (R.sid) store(STUDY+'_'+R.session, JSON.stringify(R)); }
+/* 指導語的秒數：各則相同就寫數字，不同就寫「幾秒鐘」 */
 document.querySelectorAll('.tlimit').forEach(function(el){ el.textContent = T_SEC; });
+document.querySelectorAll('.tl-same').forEach(function(el){ el.hidden = !SAME_LIMIT; });
+document.querySelectorAll('.tl-var').forEach(function(el){ el.hidden = SAME_LIMIT; });
 
 /* ================= 社團經營回饋 =================
    回饋只跟「有沒有放行」有關，與正確性、撰寫來源無關：
@@ -847,11 +907,11 @@ function releasePost(p, verdict, reasons){
   }, randInt(2500, 5000)));
 }
 /* 二次審核的最終處置套用到社團動態：退回＝移除，加註＝補上提醒，未放行過的＝放行 */
-function applyFinal(p, verdict, reasons){
+function applyFinal(p, verdict, reasons, note){
   const it = COMM.live.filter(function(x){ return x.id === p.id; })[0];
-  if (!it){ if (verdict !== 'back') releasePost(p, verdict, reasons); return; }
+  if (!it){ if (verdict !== 'back'){ releasePost(p, verdict, reasons); applyFinal(p, verdict, reasons, note); } return; }
   if (verdict === 'back'){ it.removed = true; }
-  else { it.verdict = verdict; it.reasons = reasons; }
+  else { it.verdict = verdict; it.reasons = reasons; it.note = note || ''; }
   const el = byId('fi-'+it.id);
   if (el){ el.innerHTML = fitemHtml(it); el.classList.toggle('removed', !!it.removed); }
 }
@@ -877,7 +937,7 @@ function fitemHtml(it){
   return '<div class="fh">'+avHtml(p)+'<span>'+esc(p.poster.name)+'</span><small>'+(age < 1 ? '剛剛' : age+' 分鐘')+'</small></div>'
     + '<div class="ft">'+esc(p.title)+'</div>'
     + (it.removed ? '<div class="frm">已由你移除</div>'
-       : (it.verdict === 'warn' ? '<div class="fw">⚠ 管理員提醒：'+(it.reasons.length ? esc(it.reasons.map(function(k){ return chipLabel(k,'warn'); }).join('、')) : '請留意這則內容')+'</div>' : ''))
+       : (it.verdict === 'warn' ? '<div class="fw">⚠ 管理員提醒：'+(function(){ const t = it.reasons.filter(function(k){ return k !== 'other'; }).map(function(k){ return chipLabel(k,'warn'); }).concat(it.note ? [it.note] : []); return t.length ? esc(t.join('、')) : '請留意這則內容'; })()+'</div>' : ''))
     + '<div class="fc"><span>👍 <b class="fcnt" data-k="likes">'+it.likes+'</b></span><span>留言 <b class="fcnt" data-k="cmts">'+it.cmts+'</b></span><span>分享 <b class="fcnt" data-k="shares">'+it.shares+'</b></span></div>';
 }
 function renderFeedItem(it, isNew){
@@ -956,7 +1016,7 @@ document.addEventListener('keydown', function(e){
 });
 
 /* ================= 流程 ================= */
-const STEPS = ['start','brief','fast','mid','scaffold','review','end'];
+const STEPS = ['start','brief','fast','mid','scaffold','review','end'];  /* setup 是研究者頁，不在流程內 */
 const WIDE = [];
 const PHASE = {fast:'第一輪', mid:'第一輪', scaffold:'二次審核', review:'二次審核'};
 let cur = 'start';
@@ -1018,11 +1078,11 @@ function fsRender(){
   const left = FS.order.length - FS.i;
   byId('fsCount').innerHTML = '<span class="flood"><i></i>新貼文持續送審中</span>　待審 '+left+' 則';
   byId('fsBar').style.width = (FS.i/FS.order.length*100)+'%';
-  FS.cur = { id:p.id, position:FS.i+1, shown_at:now(), t0:performance.now(), img_zoom:0 };
+  FS.cur = { id:p.id, position:FS.i+1, shown_at:now(), t0:performance.now(), img_zoom:0, limit_ms:limitMs(p.id) };
   byId('fsStage').innerHTML =
     '<div class="queue fastq">'
     + '<div class="tbar" id="fsTbar"><i></i></div>'
-    + '<div class="qhead"><span>待審貼文</span><span class="right tsec" id="fsSec">'+T_SEC+'</span></div>'
+    + '<div class="qhead"><span>待審貼文</span><span class="right tsec" id="fsSec">'+LIMITS[p.id]+'</span></div>'
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
     + rtagsHtml(p)
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
@@ -1035,7 +1095,7 @@ function fsRender(){
     +   '</div>'
     + '</div></div>';
   byId('fsStage').querySelectorAll('.vbtn').forEach(function(b){ b.onclick = function(){ fsDecide(b.dataset.v); }; });
-  FS.deadline = FS.cur.t0 + R.fast_time_limit_ms;
+  FS.deadline = FS.cur.t0 + FS.cur.limit_ms;
   fsTick();
   window.scrollTo({top:0});
 }
@@ -1043,7 +1103,7 @@ function fsTick(){
   const rem = FS.deadline - performance.now();
   const bar = byId('fsTbar'), sec = byId('fsSec');
   if (!bar) return;
-  const frac = Math.max(0, rem / R.fast_time_limit_ms);
+  const frac = Math.max(0, rem / FS.cur.limit_ms);
   bar.firstChild.style.transform = 'scaleX('+frac+')';
   sec.textContent = Math.max(0, Math.ceil(rem/1000));
   const low = rem < 3000;
@@ -1093,7 +1153,7 @@ function fsDecide(v){
   };
 }
 function fsSave(extra){
-  const rec = Object.assign({ id:FS.cur.id, position:FS.cur.position, shown_at:FS.cur.shown_at, img_zoom:FS.cur.img_zoom,
+  const rec = Object.assign({ id:FS.cur.id, position:FS.cur.position, shown_at:FS.cur.shown_at, img_zoom:FS.cur.img_zoom, limit_ms:FS.cur.limit_ms,
     members_at_decision:COMM.members, likes_at_decision:COMM.likes }, extra);
   R.fast.push(rec);
   save();
@@ -1159,7 +1219,7 @@ function rvPick(v){
   byId('rvStage').querySelectorAll('.vbtn').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.v===v)); });
   const sub = byId('rvSub');
   if (v === 'pass'){ sub.innerHTML = ''; rvCheck(); return; }
-  const cats = v === 'warn' ? WARN_CATS : BACK_CATS;
+  const cats = visibleCats(v === 'warn' ? WARN_CATS : BACK_CATS);
   sub.innerHTML = '<div class="subform">'
     + '<p class="lab">'+(v==='warn' ? '要加註哪些提醒？（可複選）' : '退回理由（可複選）')+'</p>'
     + cats.map(function(c){
@@ -1167,8 +1227,9 @@ function rvPick(v){
           + c.items.map(function(it){ return '<button class="chip" data-k="'+it[0]+'" aria-pressed="false">'+esc(it[1])+ssrTag(it[0])+'</button>'; }).join('')
           + '</div></div>';
       }).join('')
+    + '<div class="cat"><span class="cn">其他</span><div class="chips"><button class="chip" data-k="other" aria-pressed="false">其他（自己寫）</button></div></div>'
+    + '<textarea id="rvText" rows="2" hidden placeholder="'+(v==='warn' ? '寫下你的提醒（成員會看到）' : '寫下你的退回理由（作者會看到）')+'"></textarea>'
     + (v==='warn' ? '<div class="labelprev" id="rvPrev" hidden></div>' : '')
-    + '<textarea id="rvText" rows="2" placeholder="'+(v==='warn' ? '補充說明（成員會看到，可不填）' : '給作者的話（可不填）')+'"></textarea>'
     + '</div>';
   sub.querySelectorAll('.chip').forEach(function(c){
     c.onclick = function(){
@@ -1176,30 +1237,37 @@ function rvPick(v){
       if (i >= 0) RV.chips.splice(i,1); else RV.chips.push(k);
       c.setAttribute('aria-pressed', String(i < 0));
       RV.cur.chip_toggles++;
+      if (k === 'other'){ const ta = byId('rvText'); ta.hidden = i >= 0; if (i < 0) ta.focus(); }
       rvCheck();
     };
   });
-  if (v === 'warn') byId('rvText').addEventListener('input', rvCheck);
+  byId('rvText').addEventListener('input', rvCheck);
   rvCheck();
 }
+/* ssr=0 時拿掉對應 SSR 面向的理由，類別空了就整類不顯示 */
+function visibleCats(cats){
+  if (SSR_ON) return cats;
+  return cats.map(function(c){ return {cat:c.cat, items:c.items.filter(function(it){ return !REASON_MAP[it[0]]; })}; })
+             .filter(function(c){ return c.items.length; });
+}
+function rvOtherText(){ const ta = byId('rvText'); return (ta && RV.chips.indexOf('other') >= 0) ? ta.value.trim() : ''; }
 function rvCheck(){
-  const ok = RV.verdict === 'pass' || RV.chips.length > 0;
+  const needText = RV.chips.indexOf('other') >= 0 && !rvOtherText();
+  const ok = RV.verdict === 'pass' || (RV.chips.length > 0 && !needText);
   byId('rvSubmit').disabled = !ok;
-  byId('rvHint').textContent = (RV.verdict && !ok) ? '至少選一項' : '';
+  byId('rvHint').textContent = !RV.verdict || ok ? '' : (needText ? '請寫下「其他」的內容' : '至少選一項');
   const prev = byId('rvPrev');
   if (prev){
-    const extra = byId('rvText').value.trim();
-    prev.hidden = !RV.chips.length;
-    prev.innerHTML = '<small>成員會看到</small>⚠ 管理員提醒：'
-      + esc(RV.chips.map(function(k){ return chipLabel(k,'warn'); }).join('、'))
-      + (extra ? '<br>'+esc(extra) : '');
+    const labels = RV.chips.filter(function(k){ return k !== 'other'; }).map(function(k){ return chipLabel(k,'warn'); });
+    const extra = rvOtherText();
+    prev.hidden = !labels.length && !extra;
+    prev.innerHTML = '<small>成員會看到</small>⚠ 管理員提醒：' + esc(labels.concat(extra ? [extra] : []).join('、'));
   }
 }
 function rvSubmit(){
-  const ta = byId('rvText');
   const p = BY[RV.cur.id];
   const rec = Object.assign({}, RV.cur, {
-    verdict:RV.verdict, reasons:RV.chips.slice(), note: ta ? ta.value.trim() : '',
+    verdict:RV.verdict, reasons:RV.chips.slice(), note: rvOtherText(),
     decision_ms: Math.round(performance.now() - RV.cur.t0),
     facet_shown: GROUP === 'treatment' ? p.facet : null,
     members_at_submit: COMM.members, likes_at_submit: COMM.likes
@@ -1214,7 +1282,7 @@ function rvSubmit(){
   rec.shift = rec.stage1_verdict === 'timeout' ? null : LV[rec.verdict] - LV[rec.stage1_verdict];
   delete rec.t0;
   R.review.push(rec);
-  applyFinal(p, rec.verdict, rec.reasons);
+  applyFinal(p, rec.verdict, rec.reasons, rec.note);
   save();
   RV.i++;
   rvRender();
@@ -1248,7 +1316,8 @@ function trialRows(){
       rv_note:r.note, rv_first_click_ms:r.first_click_ms, rv_decision_ms:r.decision_ms,
       rv_verdict_changes:r.verdict_changes ? r.verdict_changes.length : null,
       rv_chip_toggles:r.chip_toggles, rv_img_zoom:r.img_zoom, rv_facet_shown:r.facet_shown,
-      changed:r.changed, shift:r.shift
+      changed:r.changed, shift:r.shift,
+      fast_limit_s:LIMITS[p.id], rv_other:reasons.indexOf('other') >= 0
     };
   });
 }
@@ -1262,6 +1331,8 @@ function upload(stage){
     mean_conf: done.length ? +(done.reduce(function(s,x){ return s + x.confidence; }, 0)/done.length).toFixed(2) : '',
     n_review:R.review.length, n_changed:R.review.filter(function(x){ return x.changed; }).length,
     screen:R.device.w+'x'+R.device.h, ua:R.device.ua,
+    ssr_reasons:SSR_ON, time_limits:POSTS.map(function(p){ return p.id+':'+LIMITS[p.id]; }).join(','),
+    n_other:R.review.filter(function(x){ return x.reasons.indexOf('other') >= 0; }).length,
     trials: stage === 'complete' ? trialRows() : null,
     raw: payload()
   });
@@ -1319,9 +1390,63 @@ function renderEnd(){
       + '<td>'+(r ? (r.decision_ms/1000).toFixed(1)+'s' : '')+'</td></tr>';
   }).join('');
   block.innerHTML = '<div class="reveal"><h4>研究者對照（僅 ?dev=1 顯示）</h4>'
-    + '<p style="font-size:.8rem;color:var(--ink-2)">含問題：退回 '+hit+'・加註 '+part+'・放行 '+miss+'（共 '+(hit+part+miss)+'）　正確被退回 '+fa+'/'+(fa+cr)+'　分組：'+(GROUP==='treatment'?'鷹架組':'對照組')+'　每則 '+T_SEC+' 秒</p>'
+    + '<p style="font-size:.8rem;color:var(--ink-2)">含問題：退回 '+hit+'・加註 '+part+'・放行 '+miss+'（共 '+(hit+part+miss)+'）　正確被退回 '+fa+'/'+(fa+cr)+'　分組：'+(GROUP==='treatment'?'鷹架組':'對照組')+'　秒數 '+(SAME_LIMIT ? T_SEC : POSTS.map(function(p){ return '#'+p.id+'='+LIMITS[p.id]; }).join(' '))+'　SSR 理由 '+(SSR_ON?'開':'關')+'</p>'
     + '<div class="tblwrap"><table class="mini"><thead><tr><th>貼文</th><th>實際</th><th>第一輪（秒／把握）</th><th>二次審核</th><th>秒數</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
+
+/* ================= 研究者：施測設定（?setup=1） =================
+   只產生網址，不改任何預設值；受試者拿到的網址帶著全部條件 */
+function showSetup(){
+  go('setup');
+  const all = byId('suAll'), list = byId('suList');
+  const each = {};
+  all.value = T_SEC;
+  POSTS.forEach(function(p){ each[p.id] = LIMITS[p.id]; });
+  byId('suEach').open = !SAME_LIMIT;
+  byId('suSsr').checked = SSR_ON;
+  document.querySelector('input[name="suGroup"][value="'+GROUP+'"]').checked = true;
+  list.innerHTML = POSTS.map(function(p){
+    return '<div class="sitem" id="si'+p.id+'"><span class="st" title="'+esc(p.title)+'"><small>#'+p.id+' '+(p.correctness==='correct'?'正確':'含問題')+'</small>'+esc(p.title)+'</span>'
+      + '<input type="range" min="3" max="60" step="1" data-id="'+p.id+'"><span class="sval"></span></div>';
+  }).join('');
+  function url(){
+    const q = new URLSearchParams(), t = Number(all.value);
+    if (t !== FAST_SEC) q.set('t', t);
+    const tp = POSTS.filter(function(p){ return each[p.id] !== t; }).map(function(p){ return p.id+':'+each[p.id]; });
+    if (tp.length) q.set('tp', tp.join(','));
+    if (document.querySelector('input[name="suGroup"]:checked').value === 'treatment') q.set('group', 'treatment');
+    if (!byId('suSsr').checked) q.set('ssr', '0');
+    const sid = byId('suSid').value.trim(); if (sid) q.set('sid', sid);
+    const qs = q.toString().replace(/%3A/g, ':').replace(/%2C/g, ',');
+    return location.origin + location.pathname + (qs ? '?'+qs : '');
+  }
+  function paint(){
+    byId('suAllV').textContent = all.value+' 秒';
+    list.querySelectorAll('input').forEach(function(r){
+      const id = r.dataset.id; r.value = each[id];
+      r.nextSibling.textContent = each[id]+' 秒';
+      r.parentNode.classList.toggle('diff', each[id] !== Number(all.value));
+    });
+    const u = url(); byId('suUrl').textContent = u; byId('suOpen').href = u; byId('suMsg').textContent = '';
+  }
+  all.oninput = function(){
+    const prev = Number(all.dataset.prev || T_SEC), t = Number(all.value);
+    POSTS.forEach(function(p){ if (each[p.id] === prev) each[p.id] = t; });   /* 跟著全部一起動，個別調過的保留 */
+    all.dataset.prev = t; paint();
+  };
+  all.dataset.prev = T_SEC;
+  list.oninput = function(e){ if (e.target.dataset.id){ each[e.target.dataset.id] = Number(e.target.value); paint(); } };
+  byId('suReset').onclick = function(){ POSTS.forEach(function(p){ each[p.id] = Number(all.value); }); paint(); };
+  document.querySelectorAll('input[name="suGroup"]').forEach(function(r){ r.onchange = paint; });
+  byId('suSsr').onchange = paint; byId('suSid').oninput = paint;
+  byId('suCopy').onclick = function(){
+    const msg = byId('suMsg');
+    try{ navigator.clipboard.writeText(url()).then(function(){ msg.textContent = '已複製'; }, function(){ msg.textContent = '請手動選取上面的網址'; }); }
+    catch(e){ msg.textContent = '請手動選取上面的網址'; }
+  };
+  paint();
+}
+if (params.get('setup') === '1') showSetup();
 
 /* ================= 研究者模式 ================= */
 if (DEV){
