@@ -13,7 +13,7 @@
 | `group` | 指定分組 `treatment`／`control`，不填就隨機 | `?group=control` |
 | `dev` | 研究者模式（可跳關、看正確性標記）；上傳的資料 `dev` 欄為 TRUE | `?dev=1` |
 
-組合起來：`https://<帳號>.github.io/fish12-pretest/?t=12&sid=A01`
+組合起來：`https://sufutree.github.io/SSI-Post-Moderation-Platform/?t=12&sid=A01`
 
 ## 一、設定 Google 試算表（Apps Script）
 
@@ -35,10 +35,10 @@
 
 ## 二、放上 GitHub Pages
 
-1. 在 GitHub 建一個新的 **Public** 儲存庫（例如 `fish12-pretest`），不要勾選建立 README
+1. 在 GitHub 建一個新的 **Public** 儲存庫（本專案：`sufutree/SSI-Post-Moderation-Platform`），不要勾選建立 README
 2. 在這個資料夾執行：
    ```
-   git remote add origin https://github.com/<帳號>/fish12-pretest.git
+   git remote add origin https://github.com/sufutree/SSI-Post-Moderation-Platform.git
    git push -u origin main
    ```
 3. 儲存庫 → Settings → Pages → Source 選 `Deploy from a branch`，Branch 選 `main`／`/(root)` → Save
