@@ -8,19 +8,13 @@ window.REASON_CONFIG = {
    "items": [
     {
      "id": "cx1",
-     "label": "忽略了議題牽涉的其他面向或取捨（如環境、生計、成本）",
+     "label": "將這個議題想得太過於簡單",
      "ssr": "complexity",
      "ai": false
     },
     {
-     "id": "cx2",
-     "label": "以個別案例或單一數字，推論成整體狀況",
-     "ssr": "complexity",
-     "ai": false
-    },
-    {
-     "id": "in2",
-     "label": "這個議題仍有未解的問題，內容卻當作已有定論",
+     "id": "in1",
+     "label": "議題有未解問題，但被視為已經有定論",
      "ssr": "inquiry",
      "ai": false
     },
@@ -49,25 +43,13 @@ window.REASON_CONFIG = {
    "items": [
     {
      "id": "pt1",
-     "label": "只呈現單一立場，沒有交代其他看法",
+     "label": "只呈現單一立場，沒有其他觀點",
      "ssr": "perspective",
      "ai": false
     },
     {
-     "id": "pt2",
-     "label": "沒有考慮到受議題影響的某些群體的處境",
-     "ssr": "perspective",
-     "ai": false
-    },
-    {
-     "id": "in1",
-     "label": "關鍵說法沒有附出處或數據，無法自行查證",
-     "ssr": "inquiry",
-     "ai": false
-    },
-    {
-     "id": "sk2",
-     "label": "發文者可能有立場或利益，內容像是經過挑選",
+     "id": "sk1",
+     "label": "發文者可能有特定的立場或利益",
      "ssr": "skepticism",
      "ai": false
     },
@@ -94,12 +76,6 @@ window.REASON_CONFIG = {
   {
    "cat": "表達方式",
    "items": [
-    {
-     "id": "sk1",
-     "label": "用詞情緒化或誇大，可能在引導讀者的情緒",
-     "ssr": "skepticism",
-     "ai": false
-    },
     {
      "id": "n_clickbait",
      "label": "標題聳動，像是農場文",
@@ -129,12 +105,6 @@ window.REASON_CONFIG = {
   {
    "cat": "其他",
    "items": [
-    {
-     "id": "w_disputed",
-     "label": "查核單位有不同結論",
-     "ssr": "",
-     "ai": false
-    },
     {
      "id": "w_imgsrc",
      "label": "圖片來源或拍攝地點不明",
@@ -207,19 +177,13 @@ window.REASON_CONFIG = {
    "items": [
     {
      "id": "cx1",
-     "label": "忽略了議題牽涉的其他面向或取捨（如環境、生計、成本）",
+     "label": "將這個議題想得太過於簡單",
      "ssr": "complexity",
      "ai": false
     },
     {
-     "id": "cx2",
-     "label": "以個別案例或單一數字，推論成整體狀況",
-     "ssr": "complexity",
-     "ai": false
-    },
-    {
-     "id": "in2",
-     "label": "這個議題仍有未解的問題，內容卻當作已有定論",
+     "id": "in1",
+     "label": "議題有未解問題，但被視為已經有定論",
      "ssr": "inquiry",
      "ai": false
     },
@@ -248,25 +212,13 @@ window.REASON_CONFIG = {
    "items": [
     {
      "id": "pt1",
-     "label": "只呈現單一立場，沒有交代其他看法",
+     "label": "只呈現單一立場，沒有其他觀點",
      "ssr": "perspective",
      "ai": false
     },
     {
-     "id": "pt2",
-     "label": "沒有考慮到受議題影響的某些群體的處境",
-     "ssr": "perspective",
-     "ai": false
-    },
-    {
-     "id": "in1",
-     "label": "關鍵說法沒有附出處或數據，無法自行查證",
-     "ssr": "inquiry",
-     "ai": false
-    },
-    {
-     "id": "sk2",
-     "label": "發文者可能有立場或利益，內容像是經過挑選",
+     "id": "sk1",
+     "label": "發文者可能有特定的立場或利益",
      "ssr": "skepticism",
      "ai": false
     },
@@ -293,12 +245,6 @@ window.REASON_CONFIG = {
   {
    "cat": "表達方式",
    "items": [
-    {
-     "id": "sk1",
-     "label": "用詞情緒化或誇大，可能在引導讀者的情緒",
-     "ssr": "skepticism",
-     "ai": false
-    },
     {
      "id": "n_clickbait",
      "label": "標題聳動，像是農場文",
