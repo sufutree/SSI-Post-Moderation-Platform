@@ -296,7 +296,6 @@ body.dev-ssr .ssrtag{display:inline}
 .fitem .fw{font-size:.7rem;color:var(--warn);background:var(--warn-soft);border-radius:5px;padding:.15rem .4rem;margin-bottom:.3rem}
 .fitem .fc{display:flex;gap:.8rem;font-size:.72rem;color:var(--ink-3)}
 .fcnt{font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink-2);transition:color .4s}
-.toast{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:80;background:var(--ink);color:var(--surface);font-size:.8rem;border-radius:99px;padding:.4rem .9rem;animation:tin 2.6s ease forwards;pointer-events:none}
 @keyframes tin{0%{opacity:0;transform:translate(-50%,8px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
 
 /* ---------- 研究者對照 ---------- */
@@ -906,11 +905,6 @@ function addMembers(n){
   COMM.members += n; COMM.today += n;
   paintStats(); flash(byId('stMembers')); flash(byId('stToday'));
 }
-function toast(msg){
-  document.querySelectorAll('.toast').forEach(function(x){ x.remove(); });
-  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
-  document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2700);
-}
 function commStart(){
   if (COMM.running) return;
   COMM.running = true;
@@ -938,7 +932,6 @@ function releasePost(p, verdict, reasons){
   COMM.timers.push(setTimeout(function(){
     const n = randInt(1,4);
     addMembers(n);
-    toast('「'+p.title.slice(0,14)+(p.title.length>14?'…':'')+'」帶來 '+n+' 位新成員');
   }, randInt(2500, 5000)));
 }
 /* 二次審核的最終處置套用到社團動態：退回＝移除，加註＝補上提醒，未放行過的＝放行 */
