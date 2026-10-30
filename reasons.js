@@ -128,12 +128,6 @@ window.REASON_CONFIG = {
      "label": "斷章取義、誤導讀者",
      "ssr": "",
      "ai": false
-    },
-    {
-     "id": "b_mismatch",
-     "label": "圖文不符或移花接木",
-     "ssr": "",
-     "ai": false
     }
    ]
   },
@@ -230,11 +224,34 @@ window.REASON_CONFIG = {
    ]
   },
   {
-   "cat": "影像真實性",
+   "cat": "其他",
    "items": [
     {
-     "id": "b_fakeimg",
-     "label": "疑似 AI 生成或變造的影像",
+     "id": "w_imgsrc",
+     "label": "圖片來源或拍攝地點不明",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_gut",
+     "label": "我就是覺得怪怪的",
+     "ssr": "",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "AI 生成",
+   "items": [
+    {
+     "id": "w_aitext",
+     "label": "文字可能由 AI 生成",
+     "ssr": "",
+     "ai": true
+    },
+    {
+     "id": "w_aiimg",
+     "label": "圖片可能由 AI 生成或經過修改",
      "ssr": "",
      "ai": true
     }
@@ -252,17 +269,6 @@ window.REASON_CONFIG = {
     {
      "id": "b_ad",
      "label": "廣告或宣傳",
-     "ssr": "",
-     "ai": false
-    }
-   ]
-  },
-  {
-   "cat": "其他",
-   "items": [
-    {
-     "id": "n_gut",
-     "label": "我就是覺得怪怪的",
      "ssr": "",
      "ai": false
     }
