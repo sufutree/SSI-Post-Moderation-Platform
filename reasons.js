@@ -23,18 +23,6 @@ window.REASON_CONFIG = {
      "label": "資訊可能已經過時",
      "ssr": "",
      "ai": false
-    },
-    {
-     "id": "n_title",
-     "label": "標題和內文的重點不太一致",
-     "ssr": "",
-     "ai": false
-    },
-    {
-     "id": "n_jargon",
-     "label": "專有名詞沒有解釋，一般人容易誤解",
-     "ssr": "",
-     "ai": false
     }
    ]
   },
@@ -64,24 +52,12 @@ window.REASON_CONFIG = {
      "label": "轉傳內容，看不出最早是誰發的",
      "ssr": "",
      "ai": false
-    },
-    {
-     "id": "n_promo",
-     "label": "看起來像業配或宣傳文",
-     "ssr": "",
-     "ai": false
     }
    ]
   },
   {
    "cat": "表達方式",
    "items": [
-    {
-     "id": "n_clickbait",
-     "label": "標題聳動，像是農場文",
-     "ssr": "",
-     "ai": false
-    },
     {
      "id": "n_messy",
      "label": "內容太長或太雜，重點不清楚",
@@ -108,6 +84,12 @@ window.REASON_CONFIG = {
     {
      "id": "w_imgsrc",
      "label": "圖片來源或拍攝地點不明",
+     "ssr": "",
+     "ai": false
+    },
+    {
+     "id": "n_gut",
+     "label": "我就是覺得怪怪的",
      "ssr": "",
      "ai": false
     }
@@ -192,18 +174,6 @@ window.REASON_CONFIG = {
      "label": "資訊可能已經過時",
      "ssr": "",
      "ai": false
-    },
-    {
-     "id": "n_title",
-     "label": "標題和內文的重點不太一致",
-     "ssr": "",
-     "ai": false
-    },
-    {
-     "id": "n_jargon",
-     "label": "專有名詞沒有解釋，一般人容易誤解",
-     "ssr": "",
-     "ai": false
     }
    ]
   },
@@ -233,24 +203,12 @@ window.REASON_CONFIG = {
      "label": "轉傳內容，看不出最早是誰發的",
      "ssr": "",
      "ai": false
-    },
-    {
-     "id": "n_promo",
-     "label": "看起來像業配或宣傳文",
-     "ssr": "",
-     "ai": false
     }
    ]
   },
   {
    "cat": "表達方式",
    "items": [
-    {
-     "id": "n_clickbait",
-     "label": "標題聳動，像是農場文",
-     "ssr": "",
-     "ai": false
-    },
     {
      "id": "n_messy",
      "label": "內容太長或太雜，重點不清楚",
@@ -294,6 +252,17 @@ window.REASON_CONFIG = {
     {
      "id": "b_ad",
      "label": "廣告或宣傳",
+     "ssr": "",
+     "ai": false
+    }
+   ]
+  },
+  {
+   "cat": "其他",
+   "items": [
+    {
+     "id": "n_gut",
+     "label": "我就是覺得怪怪的",
      "ssr": "",
      "ai": false
     }
