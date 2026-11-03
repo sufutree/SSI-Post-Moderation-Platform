@@ -434,17 +434,14 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
 
   <!-- 第一輪結束 -->
   <section class="step" id="s-mid" hidden>
-    <div class="panel">
+    <!-- 第二輪前練習（鷹架組＝預防接種，對照組＝版規練習；由 renderPrep() 渲染），完成後才顯示下方的開始鈕 -->
+    <div id="m-scaffold"></div>
+    <div class="panel" id="midPanel" hidden>
       <h2>湧入的貼文暫時告一段落</h2>
       <p>現在有時間把剛剛的 12 則重新看一遍，這次不限時間。你可以維持剛才的決定，也可以改變。</p>
       <p><b>放行</b>　沒有疑慮的貼文；會出現在社團<br><b>加註提醒後放行</b>　有值得留意的地方，但沒有錯誤資訊；會出現在社團，下方附上你選的提醒<br><b>退回</b>　含有錯誤資訊；不會出現，作者會收到你選的理由，已放行的會從社團動態移除</p>
       <button class="btn primary" id="btnMid">開始二次審核</button>
     </div>
-  </section>
-
-  <!-- 第二輪前練習（鷹架組＝預防接種，對照組＝版規練習；由 renderPrep() 渲染） -->
-  <section class="step" id="s-scaffold" hidden>
-    <div id="m-scaffold"></div>
   </section>
 
   <!-- 審核 -->
@@ -1071,9 +1068,9 @@ document.addEventListener('keydown', function(e){
 });
 
 /* ================= 流程 ================= */
-const STEPS = ['start','brief','fast','mid','scaffold','review','end'];  /* setup 是研究者頁，不在流程內 */
+const STEPS = ['start','brief','fast','mid','review','end'];  /* setup 是研究者頁，不在流程內 */
 const WIDE = [];
-const PHASE = {fast:'第一輪', mid:'第一輪', scaffold:'二次審核', review:'二次審核'};
+const PHASE = {fast:'第一輪', mid:'第一輪', review:'二次審核'};
 let cur = 'start';
 function go(step){
   document.querySelectorAll('.step').forEach(function(el){ el.hidden = true; });
@@ -1083,7 +1080,7 @@ function go(step){
   const duo = step === 'fast' || step === 'review';
   byId('wrap').classList.toggle('duo', duo);
   byId('feedPanel').hidden = !duo;
-  const showStats = ['brief','fast','mid','scaffold','review'].indexOf(step) >= 0;
+  const showStats = ['brief','fast','mid','review'].indexOf(step) >= 0;
   ['statsBox','statsBox2','statsBox3'].forEach(function(id){ byId(id).hidden = !showStats; });
   if (step === 'fast') commStart();
   if (step === 'end'){ commStop(); if (!R.finished) R.finished = now(); }
@@ -1092,7 +1089,7 @@ function go(step){
   if (DEV) byId('devJump').value = step;
   window.scrollTo({top:0});
   if (step === 'fast') fsStart();
-  if (step === 'scaffold') renderPrep();
+  if (step === 'mid') renderPrep();
   if (step === 'review') rvStart();
   if (step === 'end') renderEnd();
   save();
@@ -1109,7 +1106,10 @@ byId('btnStart').onclick = function(){
   go('brief');
 };
 byId('btnBrief').onclick = function(){ go('fast'); };
-byId('btnMid').onclick = function(){ go('scaffold'); };
+byId('btnMid').onclick = function(){
+  if (R.prep && R.prep.outro_ms === null) R.prep.outro_ms = Math.round(performance.now() - PREP.stageAt);
+  go('review');
+};
 /* 作答中途關閉或重新整理前提醒（重新整理會從頭開始） */
 window.addEventListener('beforeunload', function(e){
   if (R.started && cur !== 'end' && cur !== 'start' && !DEV){ e.preventDefault(); e.returnValue = ''; }
@@ -1321,6 +1321,7 @@ function prepTruth(){
 }
 function renderPrep(){
   const t = GROUP === 'treatment';
+  byId('midPanel').hidden = true;
   PREP.items = prepItems(); PREP.stage = 0; PREP.picked = null; PREP.stageAt = performance.now();
   R.prep = { kind: t ? 'inoc' : 'rules', order: PREP.items.map(function(it){ return it.key; }), items: [], intro_ms: null, outro_ms: null };
   prepShow();
@@ -1330,28 +1331,29 @@ function prepShow(){
   window.scrollTo({top:0});
   if (PREP.stage === 0){
     PREP.stageAt = performance.now();
-    box.innerHTML = '<div class="panel"><h2>開始二次審核之前，先做一個 2 分鐘的小練習</h2>'
-      + (t ? '<p>社團裡的貼文，有些寫得很專業，內容卻有問題；有些看起來像 AI 做的，內容卻是對的。只憑「感覺」很容易判錯。</p>'
-             + '<p>下面 3 則是別的社團的貼文（不是剛剛那 12 則）。請先照你的判斷按一個處置，再看解析。</p>'
-           : '<p>管理社團除了看貼文內容，也要照社團版規處理。</p>'
-             + '<p>下面 3 則是別的社團收到的貼文（不是剛剛那 12 則）。請先照你的想法按一個處置，再看說明。</p>')
-      + '<button class="btn primary" id="prepGo">開始練習</button></div>';
+    box.innerHTML = '<div class="panel"><h2>重審之前，先對一下管理團隊的做法</h2>'
+      + (t ? '<p>剛剛第一輪很趕。管理團隊事後回頭看，發現有些貼文寫得很專業，內容卻有問題；也有些看起來像 AI 做的，內容卻是對的。只憑感覺處理，很容易出錯。</p>'
+             + '<p>資深管理員整理了 3 則別的社團的案例（不是剛剛那 12 則），請你先照自己的做法處理，再看管理團隊的處理建議，大約 2 分鐘。看完再重審剛剛那 12 則，會更有把握。</p>'
+           : '<p>剛剛第一輪很趕。管理團隊事後回頭看，發現不同管理員對社團版規的處理不太一樣。</p>'
+             + '<p>資深管理員整理了 3 則別的社團收到的案例（不是剛剛那 12 則），請你先照自己的想法處理，再看管理團隊的說明，大約 2 分鐘。看完再重審剛剛那 12 則，會更有把握。</p>')
+      + '<button class="btn primary" id="prepGo">先看案例</button></div>';
     byId('prepGo').onclick = function(){ R.prep.intro_ms = Math.round(performance.now() - PREP.stageAt); save(); PREP.stage = 1; prepShow(); };
     return;
   }
   if (PREP.stage > n){
     PREP.stageAt = performance.now();
-    box.innerHTML = '<div class="panel"><h2>練習完成</h2>'
-      + (t ? '<p>接下來的二次審核，每則貼文下方都會有四個問題，就是剛剛解析用的那四個。看過就好，不用回答；想看說明可以點開。</p>'
-           : '<p>接下來的二次審核，每則貼文下方都會有四條社團版規摘要。看過就好，不用回答；想看說明可以點開。</p>')
-      + '<button class="btn primary" id="prepEnd">開始二次審核</button></div>';
-    byId('prepEnd').onclick = function(){ R.prep.outro_ms = Math.round(performance.now() - PREP.stageAt); save(); go('review'); };
+    box.innerHTML = '<div class="panel"><h2>案例看完了</h2>'
+      + (t ? '<p>重審時，每則貼文下方都會附上管理團隊剛剛用的四個問題。看過就好，不用回答；想看說明可以點開。</p>'
+           : '<p>重審時，每則貼文下方都會附上四條社團版規摘要。看過就好，不用回答；想看說明可以點開。</p>')
+      + '</div>';
+    byId('midPanel').hidden = false;
+    save();
     return;
   }
   const it = PREP.items[PREP.stage-1], p = it.post;
   PREP.picked = null; PREP.cardAt = performance.now();
   box.innerHTML = '<div class="prepcard queue">'
-    + '<div class="qhead"><span>練習 '+PREP.stage+' / '+n+'</span></div>'
+    + '<div class="qhead"><span>管理團隊案例 '+PREP.stage+' / '+n+'</span></div>'
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
     + (DEV ? rtagsHtml(p) : '')
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
@@ -1683,7 +1685,7 @@ if (params.get('setup') === '1') showSetup();
 if (DEV){
   byId('devbar').hidden = false;
   byId('devGroup').value = GROUP;
-  byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; if (cur === 'review') rvRender(); if (cur === 'scaffold') renderPrep(); };
+  byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; if (cur === 'review') rvRender(); if (cur === 'mid') renderPrep(); };
   document.body.classList.add('dev-ssr');
   byId('devSsr').onchange = function(e){ document.body.classList.toggle('dev-ssr', e.target.checked); };
   byId('devTags').onchange = function(e){ document.body.classList.toggle('dev-tags', e.target.checked); };
@@ -1691,7 +1693,7 @@ if (DEV){
   byId('devSkip').onclick = function(){
     byId('devJump').value = 'review';
     byId('devJump').onchange({target:byId('devJump')});
-    go('scaffold');
+    go('mid');
   };
   byId('devJump').onchange = function(e){
     if (!R.sid){ R.sid = 'dev-'+Date.now().toString(36); R.started = now(); }
