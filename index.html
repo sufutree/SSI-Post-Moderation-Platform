@@ -123,6 +123,34 @@ body.dev-ssr .ssrtag{display:inline}
 .tag.rai{color:var(--ai);background:var(--ai-soft)}
 .ssrline{margin:.7rem 1rem .2rem;background:var(--ssr-soft);border-radius:8px;padding:.45rem .7rem;font-size:.8rem;color:var(--ssr)}
 .ssrline b{font-size:.7rem;margin-right:.4rem}
+/* 輔助欄（鷹架組＝小撇步，對照組＝社團版規；兩組共用同一個樣式） */
+.aidbox{margin:.7rem 1rem .2rem;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:.45rem .7rem}
+.aidbox .aidt{font-size:.72rem;font-weight:700;color:var(--ink-3);margin-bottom:.2rem}
+.aidrow{border-top:1px solid var(--line-2)}
+.aidt + .aidrow{border-top:0}
+.aidrow .ahead{display:flex;align-items:center;gap:.5rem;padding:.3rem 0}
+.aidrow .aq{flex:1;min-width:0;font-size:.84rem;color:var(--ink);line-height:1.5}
+.aidrow .atg{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:99px;font-size:.72rem;padding:.12rem .55rem}
+.aidrow .atg:hover{border-color:var(--brand)}
+.aidrow .ad{font-size:.8rem;color:var(--ink-2);padding:0 0 .4rem;line-height:1.6}
+.aidrow .ad[hidden]{display:none}
+/* 練習（預防接種／版規練習） */
+.prepcard{margin-bottom:1rem}
+.prepfb{margin-top:.8rem}
+.prepfb .ftier{display:inline-block;font-size:.8rem;font-weight:700;padding:.12rem .6rem;border-radius:99px}
+.ftier.best{color:var(--ok);background:var(--ok-soft)}
+.ftier.ok{color:var(--warn);background:var(--warn-soft)}
+.ftier.wrong{color:var(--bad);background:var(--bad-soft)}
+.prepfb .frec{font-size:.88rem;font-weight:700;margin:.5rem 0 .3rem}
+.prepfb p{font-size:.86rem;color:var(--ink-2);line-height:1.75;margin-bottom:.4rem}
+.prepfb ul{list-style:none;padding:0;margin:.3rem 0 .5rem;display:grid;gap:.35rem}
+.prepfb li{font-size:.86rem;color:var(--ink-2);line-height:1.7}
+.prepfb li b{color:var(--ink)}
+.prepfb .fsrc{font-size:.72rem;color:var(--ink-3);word-break:break-all}
+.prepfb .fnext{margin-top:.6rem;text-align:right}
+.vbtn[disabled]{cursor:default;opacity:.55}
+.vbtn[disabled][aria-pressed="true"]{opacity:1}
+body.dev-ssr .prepcard .rtags{display:flex}
 
 /* ---------- 審核 ---------- */
 .decide{border-top:1px solid var(--line-2);padding:.8rem .9rem 1rem;display:grid;gap:.7rem;margin-top:.6rem}
@@ -414,16 +442,9 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
     </div>
   </section>
 
-  <!-- 鷹架組前置引導 -->
+  <!-- 第二輪前練習（鷹架組＝預防接種，對照組＝版規練習；由 renderPrep() 渲染） -->
   <section class="step" id="s-scaffold" hidden>
-    <div class="panel">
-      <h2>開始之前，先看兩個例子</h2>
-      <p>看到一則貼文時，可以先問自己幾個問題。例如：</p>
-      <div class="ssrline" style="margin:.2rem 0 .5rem"><b>複雜性</b>「離岸風電招標金額是市價兩倍，比核電貴五倍」——這件事還牽涉哪些面向與權衡？當成單一原因會漏掉什麼？</div>
-      <div class="ssrline" style="margin:0 0 .8rem"><b>探究</b>「太陽能板廢料毒性是核廢料的 300 倍」——要確認這個說法，還缺哪些資訊？該去哪裡找？</div>
-      <p>二次審核時，每則貼文下方也會有一句類似的問題，看過就好，不用回答。</p>
-      <button class="btn primary" id="btnScaffold">開始二次審核</button>
-    </div>
+    <div id="m-scaffold"></div>
   </section>
 
   <!-- 審核 -->
@@ -1071,6 +1092,7 @@ function go(step){
   if (DEV) byId('devJump').value = step;
   window.scrollTo({top:0});
   if (step === 'fast') fsStart();
+  if (step === 'scaffold') renderPrep();
   if (step === 'review') rvStart();
   if (step === 'end') renderEnd();
   save();
@@ -1087,8 +1109,7 @@ byId('btnStart').onclick = function(){
   go('brief');
 };
 byId('btnBrief').onclick = function(){ go('fast'); };
-byId('btnMid').onclick = function(){ go(GROUP === 'treatment' ? 'scaffold' : 'review'); };
-byId('btnScaffold').onclick = function(){ go('review'); };
+byId('btnMid').onclick = function(){ go('scaffold'); };
 /* 作答中途關閉或重新整理前提醒（重新整理會從頭開始） */
 window.addEventListener('beforeunload', function(e){
   if (R.started && cur !== 'end' && cur !== 'start' && !DEV){ e.preventDefault(); e.returnValue = ''; }
@@ -1195,6 +1216,176 @@ function fsSave(extra){
 function fsNext(){ FS.i++; fsRender(); }
 function fastOf(id){ return R.fast.filter(function(x){ return x.id === id; })[0] || null; }
 
+/* ================= 第二輪前練習 + 輔助欄 =================
+   鷹架組：預防接種（INOC，3 則）＋小撇步（TIPS）；對照組：版規練習（RULEP）＋社團版規（RULES）。
+   兩組結構、位置、互動完全對等，只有內容不同。練習貼文不進 POSTS／BY／IMGPOSTS／truth。 */
+const TIPS = [
+  {key:"cx", q:"還牽涉哪些取捨？", d:"這件事是不是只講了一個原因？背後有沒有成本、時間或條件上的差別？"},
+  {key:"pt", q:"誰會受影響？", d:"有哪些人會被這件事影響？他們的處境，貼文有寫到嗎？"},
+  {key:"in", q:"還缺什麼資訊？", d:"數字從哪裡來？要相信這個說法，你還需要知道什麼？"},
+  {key:"sk", q:"誰發的？為什麼？", d:"發文者想讓你相信什麼？你說得出理由嗎，還是只看身分？"}
+];
+const RULES = [
+  {key:"r1", q:"友善交流", d:"留言和貼文請保持禮貌，不人身攻擊。"},
+  {key:"r2", q:"商業內容需標註", d:"團購或廣告請加註「非社團合作」。"},
+  {key:"r3", q:"勿重複張貼", d:"同一內容一週內請勿重複發文。"},
+  {key:"r4", q:"活動附時間地點", d:"活動內容請寫清楚時間與地點。"}
+];
+const TIER_TXT = {best:"✓ 判得好", ok:"△ 可以，但還能更好", wrong:"✗ 再想想"};
+const VREC = {pass:"放行", warn:"加註提醒後放行", back:"退回"};
+const INOC = [
+ {key:"inocA", post:{id:901, key:"inocA", source:"human", correctness:"flawed", imgType:"none",
+   poster:{name:"電力時事通", kind:"page", cat:"新聞與媒體網站", color:"#4A6A8A"}, ago:"1 天",
+   title:"台電提醒民眾「在春節假期出遠門時要記得拔插頭」，理由竟然不是省電，而是綠電太多會造成民眾的損失和風險",
+   body:"因為今年春節假期長達十天，工廠、商業用電減少，預估用電負載僅1,750萬瓩，用電下降會導致電壓上升。另一方面，秋冬是離岸風電發電全盛期，再生能源滲透率，大年初二有望突破30%。若臨時風力、日照變強，火力機組來不及降載，影響電網穩定性，也會造成電壓飆升，甚至可能升至130伏特。若連續數小時都高過耐壓值範圍，老舊的電器絕緣不佳，可能導致電器損壞，或者更嚴重的是引起電線走火的公共安全問題。",
+   imgs:[]},
+  tiers:{pass:"wrong", warn:"wrong", back:"best"}, rec:"退回", recNote:"",
+  lead:"這則的數字大多有出處：台電確實說過春節用電負載約 1,750 萬瓩、電壓可能升到 130 伏特左右，也確實請民眾出遠門時拔插頭。問題出在標題的因果：台電說的主因是<b>假期用電大減</b>，電壓才跟著升高，台電也會降壓運轉；貼文卻把原因說成「綠電太多會造成民眾損失」。文筆專業、數字也是真的，不代表結論是對的。",
+  lines:["電壓升高跟用電量大降有關，貼文卻把它講成只有綠電一個原因。","讀者會以為是綠電害自家電器壞掉，對再生能源產生不必要的恐慌。","台電原本怎麼說？調度中心會不會把電壓控制在安全範圍內？","標題用「理由竟然是…」製造反轉，想讓人相信某個結論，而不是單純轉述提醒。"],
+  src:"資料來源：Cofacts 查核回應（https://cofacts.tw/article/2fcwa9qymgw70 ）；TechNews 2023-01-15 引述台電說明（https://technews.tw/2023/01/15/electric-power-vacation/ ）。"},
+ {key:"inocC", post:{id:903, key:"inocC", source:"human", correctness:"correct", imgType:"none",
+   poster:{name:"節能生活辦公室", kind:"page", cat:"政府機關", color:"#2F6E9E"}, ago:"6 小時",
+   title:"今天是夏月電價的第一天",
+   body:"夏月電價1989年推行，每年6至9月實施，主要是反映夏季尖峰用電成本。美、日、英等國都有季節電價設計，藉此引導民眾節電、降低夏季尖峰負載，#全年平均電價並未改變，大家不要相信夏天又漲電價的謠言喔。\n為了夏天能省電、省錢，別讓老舊家電變成吃電怪獸。汰換高效率的冷氣及冰箱，跟夏月使用老舊電器比較，還能幫您省下50%用電量，不只是節能減碳，還幫您省荷包。",
+   imgs:[]},
+  tiers:{pass:"ok", warn:"best", back:"wrong"}, rec:"加註提醒後放行", recNote:"（直接放行也可以）",
+  lead:"內容沒有錯，但它是主管機關的宣導，只從政府的角度說明。「全年平均電價沒變」是真的，可是夏月期間每度電比較貴，用電多的家庭帳單還是會變高，這一點貼文沒有提。內容正確就不該退回；只講一面，就值得加註提醒。",
+  lines:["平均電價沒變，和「夏天帳單會不會變高」是兩件事。","用電多、家電老舊、沒錢換新家電的家庭，感受會和宣導不一樣。","夏月和非夏月每度差多少？「省下 50%」是跟什麼比？","發文的是推動政策的機關，想說服大家這不是漲價；說得出這個理由才算懷疑，不是看到「政府」兩個字就不信。"],
+  src:""},
+ {key:"inocB", post:{id:902, key:"inocB", source:"ai", correctness:"correct", imgType:"ai",
+   poster:{name:"地方生活誌", kind:"page", cat:"社群", color:"#7A5C3E"}, ago:"3 小時",
+   title:"台灣的用電尖峰，已經從白天搬到晚上",
+   body:"過去談供電壓力，大家想到的都是正午最熱的時候。隨著光電裝置容量增加，白天日照充足時光電能補上一大塊需求，真正吃緊的反而是太陽下山後那幾個小時。因應方式不只一種：日落前先排程讓燃氣、水力機組上線，搭配儲能和虛擬電廠，再透過時間電價、需量反應請用電大戶把用電挪開，一起分散夜間的負載。",
+   imgs:["ai_images/inoc_902.png"]},
+  tiers:{pass:"best", warn:"best", back:"wrong"}, rec:"放行", recNote:"（加註也可以）",
+  lead:"這則的文字和圖片<b>都是 AI 生成的</b>，但內容是對的：光電增加後，供電最吃緊的時段確實移到傍晚以後，貼文列出的因應方式也都是實際在用的做法。「看起來像 AI」不是退回的理由，要看內容本身。",
+  lines:["貼文講到不只一種因應方式，沒有把問題講成單一解法。","用電大戶要配合挪開用電時段，貼文也有提到。","想再確認的話，可以查台電的夜尖峰負載資料；但目前寫的內容沒有錯。","地方生活類粉專，一般說明語氣，看不出特定利益。"],
+  src:"判讀的重點是<b>內容對不對</b>，不是<b>誰做的、用什麼做的</b>。", srcRaw:true}
+];
+const RULEP = [
+ {key:"ruleA", post:{id:911, key:"ruleA", source:"human", correctness:"correct", imgType:"none",
+   poster:{name:"林佳穎", kind:"person"}, ago:"20 分鐘",
+   title:"週六淨灘活動", body:"這週六早上 9 點在旗津海岸有淨灘活動，自備手套和水壺，結束後一起吃早餐，想參加的留言＋1！", imgs:[]},
+  tiers:{pass:"best", warn:"ok", back:"wrong"}, rec:"放行", recNote:"（加註也可以）",
+  lead:"社團活動、交流內容歡迎張貼，符合社團用途，直接放行即可。這則的語氣友善，時間和地點也都寫得清楚，四條版規逐一對照都沒有問題。",
+  lines:["語氣友善、沒有攻擊他人。","不是商業內容，不需要標註。","第一次張貼，沒有重複。","有寫時間和地點，內容完整。"], src:""},
+ {key:"ruleB", post:{id:912, key:"ruleB", source:"human", correctness:"correct", imgType:"none",
+   poster:{name:"好物團購站", kind:"page", cat:"購物", color:"#8A5A2E"}, ago:"35 分鐘",
+   title:"電風扇團購開跑", body:"電風扇團購開跑！原價 2,490，團購價 1,690，下單連結在留言區，數量有限。", imgs:[]},
+  tiers:{pass:"ok", warn:"best", back:"wrong"}, rec:"加註提醒後放行", recNote:"（直接放行也可以）",
+  lead:"商業團購可以張貼，但要加註「非社團合作」。這則是團購，版規要求的標註還沒有寫，所以放行時補上提醒最合適；整則退回就太重了。",
+  lines:["語氣沒有問題，也沒有攻擊他人。","這是團購，應該加註說明不是社團合作的活動。","第一次張貼，沒有重複。","不是活動，這一條不適用。"], src:""},
+ {key:"ruleC", post:{id:913, key:"ruleC", source:"human", correctness:"correct", imgType:"none",
+   poster:{name:"王俊傑", kind:"person"}, ago:"50 分鐘",
+   title:"二手機車便宜賣", body:"再發一次～二手機車便宜賣，私訊詳談。", imgs:[]},
+  tiers:{pass:"wrong", warn:"wrong", back:"best"}, rec:"退回", recNote:"",
+  lead:"同一內容重複張貼屬於洗版，應退回。這位社員已經是第三次張貼同一則二手機車出售文，不管內容本身如何，都不符合版規。",
+  lines:["語氣沒有問題，也沒有攻擊他人。","個人二手買賣，不算商業團購，不需要標註。","這是第三次張貼同樣的內容，已經重複。","不是活動，這一條不適用。"], src:""}
+];
+function aidList(){ return GROUP === 'treatment' ? TIPS : RULES; }
+function aidBoxHtml(){
+  const t = GROUP === 'treatment';
+  return '<div class="aidbox"><div class="aidt">'+(t ? '判讀前想一想' : '社團版規')+'</div>'
+    + aidList().map(function(a){
+        return '<div class="aidrow" data-k="'+a.key+'"><div class="ahead"><span class="aq">'+esc(a.q)
+          + (DEV && t ? '<span class="ssrtag">'+a.key.toUpperCase()+'</span>' : '')
+          + '</span><button type="button" class="atg" aria-expanded="false">說明 ▾</button></div>'
+          + '<div class="ad" hidden>'+esc(a.d)+'</div></div>';
+      }).join('')
+    + '</div>';
+}
+/* 輔助欄開合：onEvent(key, action) 記錄事件 */
+function aidBind(root, onEvent){
+  root.querySelectorAll('.aidrow').forEach(function(row){
+    const btn = row.querySelector('.atg'), d = row.querySelector('.ad');
+    btn.onclick = function(){
+      const open = d.hidden;
+      d.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? '收合 ▴' : '說明 ▾';
+      if (onEvent) onEvent(row.dataset.k, open ? 'open' : 'close');
+    };
+  });
+}
+
+const PREP = { stage:0, items:null, cardAt:0, fbAt:0, stageAt:0, picked:null };
+function prepItems(){
+  if (GROUP === 'treatment') return ['inocA','inocC','inocB'].map(function(k){ return INOC.filter(function(x){ return x.key === k; })[0]; });
+  return RULEP;
+}
+function prepTruth(){
+  return prepItems().map(function(it){
+    const best = Object.keys(it.tiers).filter(function(v){ return it.tiers[v] === 'best'; });
+    return {key:it.key, correctness:it.post.correctness, best:best};
+  });
+}
+function renderPrep(){
+  const t = GROUP === 'treatment';
+  PREP.items = prepItems(); PREP.stage = 0; PREP.picked = null; PREP.stageAt = performance.now();
+  R.prep = { kind: t ? 'inoc' : 'rules', order: PREP.items.map(function(it){ return it.key; }), items: [], intro_ms: null, outro_ms: null };
+  prepShow();
+}
+function prepShow(){
+  const box = byId('m-scaffold'), t = GROUP === 'treatment', n = PREP.items.length;
+  window.scrollTo({top:0});
+  if (PREP.stage === 0){
+    PREP.stageAt = performance.now();
+    box.innerHTML = '<div class="panel"><h2>開始二次審核之前，先做一個 2 分鐘的小練習</h2>'
+      + (t ? '<p>社團裡的貼文，有些寫得很專業，內容卻有問題；有些看起來像 AI 做的，內容卻是對的。只憑「感覺」很容易判錯。</p>'
+             + '<p>下面 3 則是別的社團的貼文（不是剛剛那 12 則）。請先照你的判斷按一個處置，再看解析。</p>'
+           : '<p>管理社團除了看貼文內容，也要照社團版規處理。</p>'
+             + '<p>下面 3 則是別的社團收到的貼文（不是剛剛那 12 則）。請先照你的想法按一個處置，再看說明。</p>')
+      + '<button class="btn primary" id="prepGo">開始練習</button></div>';
+    byId('prepGo').onclick = function(){ R.prep.intro_ms = Math.round(performance.now() - PREP.stageAt); save(); PREP.stage = 1; prepShow(); };
+    return;
+  }
+  if (PREP.stage > n){
+    PREP.stageAt = performance.now();
+    box.innerHTML = '<div class="panel"><h2>練習完成</h2>'
+      + (t ? '<p>接下來的二次審核，每則貼文下方都會有四個問題，就是剛剛解析用的那四個。看過就好，不用回答；想看說明可以點開。</p>'
+           : '<p>接下來的二次審核，每則貼文下方都會有四條社團版規摘要。看過就好，不用回答；想看說明可以點開。</p>')
+      + '<button class="btn primary" id="prepEnd">開始二次審核</button></div>';
+    byId('prepEnd').onclick = function(){ R.prep.outro_ms = Math.round(performance.now() - PREP.stageAt); save(); go('review'); };
+    return;
+  }
+  const it = PREP.items[PREP.stage-1], p = it.post;
+  PREP.picked = null; PREP.cardAt = performance.now();
+  box.innerHTML = '<div class="prepcard queue">'
+    + '<div class="qhead"><span>練習 '+PREP.stage+' / '+n+'</span></div>'
+    + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
+    + (DEV ? rtagsHtml(p) : '')
+    + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
+    + mediaHtml(p)
+    + '<div class="decide"><div class="vbtns">'
+    +   '<button class="vbtn pass" data-v="pass" aria-pressed="false">放行</button>'
+    +   '<button class="vbtn warn" data-v="warn" aria-pressed="false">加註提醒後放行</button>'
+    +   '<button class="vbtn back" data-v="back" aria-pressed="false">退回</button>'
+    + '</div><div id="prepFb"></div></div></div>';
+  box.querySelectorAll('.vbtn').forEach(function(b){ b.onclick = function(){ prepPick(b.dataset.v); }; });
+}
+function prepPick(v){
+  if (PREP.picked) return;
+  PREP.picked = v;
+  const it = PREP.items[PREP.stage-1], t = GROUP === 'treatment', n = PREP.items.length;
+  const rt = Math.round(performance.now() - PREP.cardAt);
+  PREP.fbAt = performance.now();
+  const tier = it.tiers[v];
+  byId('m-scaffold').querySelectorAll('.vbtn').forEach(function(b){ b.disabled = true; b.setAttribute('aria-pressed', String(b.dataset.v === v)); });
+  const qs = (t ? TIPS : RULES).map(function(a){ return a.q; });
+  byId('prepFb').innerHTML = '<div class="prepfb">'
+    + '<span class="ftier '+tier+'">'+TIER_TXT[tier]+'</span>'
+    + '<div class="frec">建議處置：'+it.rec+esc(it.recNote)+'</div>'
+    + '<p>'+it.lead+'</p>'
+    + '<ul>'+it.lines.map(function(l,i){ return '<li><b>'+esc(qs[i])+'</b> '+esc(l)+'</li>'; }).join('')+'</ul>'
+    + (it.src ? '<p class="fsrc">'+(it.srcRaw ? it.src : esc(it.src))+'</p>' : '')
+    + '<div class="fnext"><button class="btn primary" id="prepNext">'+(PREP.stage === n ? '繼續' : '下一則')+'</button></div></div>';
+  byId('prepNext').onclick = function(){
+    R.prep.items.push({key:it.key, shown_at:now(), verdict:v, tier:tier, rt_ms:rt, read_ms:Math.round(performance.now() - PREP.fbAt)});
+    save();
+    PREP.stage++; prepShow();
+  };
+}
+
 /* ================= 審核任務 ================= */
 const RV = { order:null, i:0, cur:null, verdict:null, chips:[] };
 function rvStart(){
@@ -1216,8 +1407,8 @@ function rvRender(){
   byId('rvBar').style.width = (RV.i/RV.order.length*100)+'%';
   RV.verdict = null; RV.chips = [];
   RV.cur = { id:p.id, position:RV.i+1, shown_at:now(), t0:performance.now(), first_click_ms:null,
-             verdict_changes:[], chip_toggles:0, img_zoom:0 };
-  const f = FACETS[p.facet];
+             verdict_changes:[], chip_toggles:0, img_zoom:0,
+             aid_kind: GROUP === 'treatment' ? 'ssr_tips' : 'rules', aid_events:[] };
   byId('rvStage').innerHTML =
     '<div class="queue">'
     + '<div class="qhead"><span>二次審核</span><span class="right prevround">'+prevRoundText(p.id)+'</span></div>'
@@ -1225,7 +1416,7 @@ function rvRender(){
     + rtagsHtml(p)
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
     + mediaHtml(p)
-    + (GROUP === 'treatment' ? '<div class="ssrline"><b>'+esc(f.label)+'</b>'+esc(f.text)+'</div>' : '')
+    + aidBoxHtml()
     + '<div class="decide">'
     +   '<div class="vbtns">'
     +     '<button class="vbtn pass" data-v="pass" aria-pressed="false">放行</button>'
@@ -1236,6 +1427,9 @@ function rvRender(){
     +   '<div class="qfoot"><span class="hint" id="rvHint"></span><button class="btn primary" id="rvSubmit" disabled>送出</button></div>'
     + '</div></div>';
   byId('rvStage').querySelectorAll('.vbtn').forEach(function(b){ b.onclick = function(){ rvPick(b.dataset.v); }; });
+  aidBind(byId('rvStage'), function(k, action){
+    RV.cur.aid_events.push({key:k, action:action, ms:Math.round(performance.now() - RV.cur.t0)});
+  });
   byId('rvSubmit').onclick = rvSubmit;
 }
 /* 研究者模式：在理由旁標出對應的 SSR 面向（受試者畫面不出現） */
@@ -1303,7 +1497,9 @@ function rvSubmit(){
   const rec = Object.assign({}, RV.cur, {
     verdict:RV.verdict, reasons:RV.chips.slice(), note: rvOtherText(),
     decision_ms: Math.round(performance.now() - RV.cur.t0),
-    facet_shown: GROUP === 'treatment' ? p.facet : null,
+    facet_shown: null,
+    aid_open_count: RV.cur.aid_events.filter(function(e){ return e.action === 'open'; }).length,
+    aid_opened_keys: RV.cur.aid_events.reduce(function(a,e){ if (e.action === 'open' && a.indexOf(e.key) < 0) a.push(e.key); return a; }, []),
     members_at_submit: COMM.members, likes_at_submit: COMM.likes
   });
   const f = fastOf(p.id);
@@ -1329,6 +1525,7 @@ function payload(){
     reason_map: REASON_MAP,
     ai_reasons: AI_REASONS,
     reason_config: CFG,
+    prep_truth: prepTruth(),
     truth: POSTS.map(function(p){ return {id:p.id, correctness:p.correctness, source:p.source, imgType:p.imgType, poster_kind:p.poster.kind}; })
   }), null, 2);
 }
@@ -1486,7 +1683,7 @@ if (params.get('setup') === '1') showSetup();
 if (DEV){
   byId('devbar').hidden = false;
   byId('devGroup').value = GROUP;
-  byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; if (cur === 'review') rvRender(); };
+  byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; if (cur === 'review') rvRender(); if (cur === 'scaffold') renderPrep(); };
   document.body.classList.add('dev-ssr');
   byId('devSsr').onchange = function(e){ document.body.classList.toggle('dev-ssr', e.target.checked); };
   byId('devTags').onchange = function(e){ document.body.classList.toggle('dev-tags', e.target.checked); };
@@ -1494,7 +1691,7 @@ if (DEV){
   byId('devSkip').onclick = function(){
     byId('devJump').value = 'review';
     byId('devJump').onchange({target:byId('devJump')});
-    if (GROUP === 'treatment') go('scaffold');
+    go('scaffold');
   };
   byId('devJump').onchange = function(e){
     if (!R.sid){ R.sid = 'dev-'+Date.now().toString(36); R.started = now(); }
