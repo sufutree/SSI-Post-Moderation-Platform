@@ -176,6 +176,15 @@ body.dev-ssr .prepcard .rtags{display:flex}
 .qfoot{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
 .qfoot .hint{font-size:.76rem;color:var(--ink-3);margin-right:auto}
 
+/* 處置標準 */
+.crit{border:2px solid var(--brand);background:var(--brand-soft);border-radius:10px;padding:.6rem .8rem;margin:.6rem 0 .9rem;display:grid;gap:.35rem}
+.crit-t{font-size:.82rem;font-weight:700;color:var(--brand)}
+.crit-r{display:flex;gap:.6rem;align-items:baseline;font-size:.9rem;line-height:1.5}
+.crit-r b{flex:0 0 7.2rem}
+.crit-r.pass b{color:var(--ok)}.crit-r.warn b{color:var(--warn)}.crit-r.back b{color:var(--bad)}
+@media (max-width:460px){.crit-r{flex-direction:column;gap:0}.crit-r b{flex:none}}
+.vbtn small{display:block;font-size:.68rem;font-weight:400;color:var(--ink-3);margin-top:.15rem;line-height:1.35}
+.vbtn[aria-pressed="true"] small{color:inherit}
 /* ---------- 分類任務 ---------- */
 .taskhead{margin-bottom:.7rem}
 .taskhead h2{font-size:1.08rem}
@@ -417,7 +426,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
       <h2>你是這個社團的審核管理員</h2>
       <p>「台灣綠能生活討論區」有一萬兩千多位成員，來自全台各地，有住在南部沿海的養殖戶，也有關心電價、環境與食品安全的一般民眾。成員或粉專想在社團發文，都要先經過管理團隊審核，今晚輪到你值班。</p>
       <p>「漁電共生」是在魚塭上方架設太陽能光電板，讓同一塊地可以一邊養殖水產、一邊發電。這個話題今天突然延燒，大量貼文同時湧進來，每一則你<span class="tl-same">只有 <b class="tlimit">10</b> 秒</span><span class="tl-var" hidden>只有幾秒鐘</span>可以決定：</p>
-      <p><b>放行</b>　沒有疑慮的貼文<br><b>加註提醒後放行</b>　有值得留意的地方，但沒有錯誤資訊<br><b>退回</b>　含有錯誤資訊</p>
+      <div class="crit"><div class="crit-t">處置標準：請照這個標準決定，不要憑感覺</div><div class="crit-r pass"><b>放行</b><span>沒有疑慮的貼文</span></div><div class="crit-r warn"><b>加註提醒後放行</b><span>有值得留意的地方，但沒有錯誤資訊</span></div><div class="crit-r back"><b>退回</b><span>含有錯誤資訊</span></div></div>
       <p>時間到還沒決定的就先跳過。</p>
       <p>每做一個決定，拉一下你對這個決定有多少把握。</p>
       <p>放行的貼文會立刻出現在社團動態，上方會顯示社團的成員數和今天的互動。貼文來源很多元，其中也有 AI 生成的內容，就跟一般社群平台一樣。</p>
@@ -439,7 +448,8 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
     <div class="panel" id="midPanel" hidden>
       <h2>湧入的貼文暫時告一段落</h2>
       <p>現在有時間把剛剛的 12 則重新看一遍，這次不限時間。你可以維持剛才的決定，也可以改變。</p>
-      <p><b>放行</b>　沒有疑慮的貼文；會出現在社團<br><b>加註提醒後放行</b>　有值得留意的地方，但沒有錯誤資訊；會出現在社團，下方附上你選的提醒<br><b>退回</b>　含有錯誤資訊；不會出現，作者會收到你選的理由，已放行的會從社團動態移除</p>
+      <div class="crit"><div class="crit-t">處置標準：請照這個標準決定，不要憑感覺</div><div class="crit-r pass"><b>放行</b><span>沒有疑慮的貼文</span></div><div class="crit-r warn"><b>加註提醒後放行</b><span>有值得留意的地方，但沒有錯誤資訊</span></div><div class="crit-r back"><b>退回</b><span>含有錯誤資訊</span></div></div>
+      <p>放行與加註提醒後放行的貼文會出現在社團，加註的下方附上你選的提醒；退回的貼文不會出現，作者會收到你選的理由，已放行的會從社團動態移除。</p>
       <button class="btn primary" id="btnMid">開始二次審核</button>
     </div>
   </section>
@@ -1144,9 +1154,9 @@ function fsRender(){
     + mediaHtml(p)
     + '<div class="decide" id="fsDecide">'
     +   '<div class="vbtns fast3">'
-    +     '<button class="vbtn pass" data-v="pass">放行</button>'
-    +     '<button class="vbtn warn" data-v="warn">加註提醒<br>後放行</button>'
-    +     '<button class="vbtn back" data-v="back">退回</button>'
+    +     '<button class="vbtn pass" data-v="pass">放行<small>沒有疑慮</small></button>'
+    +     '<button class="vbtn warn" data-v="warn">加註提醒<br>後放行<small>值得留意，但沒有錯誤資訊</small></button>'
+    +     '<button class="vbtn back" data-v="back">退回<small>含有錯誤資訊</small></button>'
     +   '</div>'
     + '</div></div>';
   byId('fsStage').querySelectorAll('.vbtn').forEach(function(b){ b.onclick = function(){ fsDecide(b.dataset.v); }; });
@@ -1421,9 +1431,9 @@ function rvRender(){
     + aidBoxHtml()
     + '<div class="decide">'
     +   '<div class="vbtns">'
-    +     '<button class="vbtn pass" data-v="pass" aria-pressed="false">放行</button>'
-    +     '<button class="vbtn warn" data-v="warn" aria-pressed="false">加註提醒後放行</button>'
-    +     '<button class="vbtn back" data-v="back" aria-pressed="false">退回</button>'
+    +     '<button class="vbtn pass" data-v="pass" aria-pressed="false">放行<small>沒有疑慮</small></button>'
+    +     '<button class="vbtn warn" data-v="warn" aria-pressed="false">加註提醒後放行<small>值得留意，但沒有錯誤資訊</small></button>'
+    +     '<button class="vbtn back" data-v="back" aria-pressed="false">退回<small>含有錯誤資訊</small></button>'
     +   '</div>'
     +   '<div id="rvSub"></div>'
     +   '<div class="qfoot"><span class="hint" id="rvHint"></span><button class="btn primary" id="rvSubmit" disabled>送出</button></div>'
