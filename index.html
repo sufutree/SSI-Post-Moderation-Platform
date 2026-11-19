@@ -494,7 +494,9 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
      tp=7:6,19:20    個別貼文秒數（貼文 id:秒數），沒列到的用 t
      group=treatment 鷹架組（不填＝對照組）
      ssr=0           審核理由不顯示 SSR 面向的選項 */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzHvEqq0uoveAuRUBrUHz9IH8hnbSyBIZJWzaLVAuKV9B-lDulhjf45frmw_K8R6EmZbA/exec';
+/* v2-redesign 分支一律送到開發用試算表（不含正式施測的網址）；正式上線前再另行指定 */
+const GAS_URL_DEV = 'https://script.google.com/macros/s/AKfycbwYJyGVa9kgx2z5wVMI6NeecsDu6l-PX1qLK_3MpmUdN_g6OD-x8bRRYJOOQHzFkdWmnA/exec';
+const GAS_URL = GAS_URL_DEV;
 const FAST_SEC = 10;
 const STUDY = 'fish12_v2_dev';
 /* ================= 素材 =================
@@ -1184,7 +1186,7 @@ function upload(stage){
   if (!/^https:\/\/script\.google\.com\//.test(GAS_URL)){ upDone(false, '尚未設定 GAS_URL'); return Promise.resolve(false); }
   const done = R.fast.filter(function(x){ return x.verdict !== 'timeout'; });
   const body = JSON.stringify({
-    stage:stage, study:STUDY, session:R.session, sid:R.sid, group:R.group, dev:DEV,
+    stage:stage, study:STUDY, session:R.session, sid:R.sid, group:R.group, list:R.list, mode:MODE || '', dev:DEV,
     started:R.started, finished:R.finished, time_limit_s:T_SEC,
     n_fast:R.fast.length, n_timeout:R.fast.length - done.length,
     mean_conf: done.length ? +(done.reduce(function(s,x){ return s + x.confidence; }, 0)/done.length).toFixed(2) : '',

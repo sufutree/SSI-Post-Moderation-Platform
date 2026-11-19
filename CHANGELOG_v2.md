@@ -99,3 +99,11 @@
 - 每則紀錄：`open_reason, open_reason_len, open_first_key_ms, open_done_ms, basis, basis_codes, basis_order, basis_toggles`；已移除 `reasons, chip_toggles, note`、`rv_other`、`n_other`；payload 附 `basis_config`，不再有 `reason_map/ai_reasons/reason_config`。trialRows 對應 `rv_open_*`、`rv_basis*`。
 - 措辭比對（basis label vs TIPS 的 q 與 d）：其餘皆無重複詞組；唯一重疊是「受這件事影響的人」與 TIPS「pt」說明文字「有哪些人會被這件事影響？」共用「這件事影響」；與問句「誰會受影響？」只共用「影響」二字。
 - 待處理：`ssr=0` 參數與 setup 頁的「SSR 理由」選項已無作用；`ssr_reasons` 欄位仍在 payload；Apps Script 欄位待第 5 段。
+
+## 第 5 段：資料送出（2026-11-19）
+- `GAS_URL_DEV`（開發用 Apps Script 網址）取代原正式網址，`GAS_URL = GAS_URL_DEV`；v2 分支的程式碼裡已不含正式網址。
+- upload 新增 `list`、`mode` 欄位；其餘送出時機不變（第一輪結束＋完成各一次，同 session 覆寫）。
+- 因 Apps Script 是拆欄位存，新增 `gas/Code_v2.gs`（P_COLS、T_COLS 對應 v2 欄位）。**尚未部署，由 Sufu 部署**。
+- 新增 `DATA_DICTIONARY_v2.md`。
+- 本機模擬（jsdom、攔截 fetch）：鷹架組與對照組各一次，兩次送出的欄位與 P_COLS／T_COLS 完全對得上；未真的送到試算表。
+- 注意：dev 試算表若曾用 v1 欄位寫過資料，標題列會被改成新欄位而與舊資料錯位，請用新表或清空後再測。
