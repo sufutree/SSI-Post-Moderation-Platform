@@ -106,10 +106,6 @@ textarea{width:100%;font-size:.88rem;border:1px solid var(--line);border-radius:
 .ps{font-size:.72rem;color:var(--ink-3)}
 .pb{padding:.1rem 1rem .7rem;color:var(--ink);font-size:.92rem;white-space:pre-wrap;line-height:1.8}
 .pb b{display:block;font-weight:700;margin-bottom:.15rem}
-.media{border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);background:var(--surface-2);cursor:zoom-in}
-.media img{display:block;width:100%;max-height:22rem;object-fit:contain;background:var(--surface-2)}
-.media.duo{display:flex;aspect-ratio:2/1;max-height:22rem}
-.media.duo img{flex:1 1 0;min-width:0;height:100%;max-height:none;object-fit:cover}
 .rtags{display:flex;gap:.35rem;padding:0 1rem .4rem}
 body:not(.dev-tags) .rtags{display:none}
 .ssrtag{display:none;margin-left:.4rem;font-size:.66rem;font-weight:600;color:var(--ssr);background:var(--ssr-soft);border:1px solid var(--ssr);border-radius:4px;padding:0 .3rem;vertical-align:1px}
@@ -267,12 +263,7 @@ body.dev-ssr .prepcard .rtags{display:flex}
 .mbody{overflow:auto;padding:1rem 1.2rem 1.2rem}
 .mbody h3{font-size:1.02rem;margin-bottom:.5rem}
 .mbody .full{font-size:.92rem;color:var(--ink-2);white-space:pre-wrap;line-height:1.85}
-.mbody .mimgs{display:flex;gap:.6rem;margin-top:.9rem;flex-wrap:wrap}
-.mbody .mimgs img{max-width:100%;max-height:24rem;border-radius:8px;border:1px solid var(--line-2);cursor:zoom-in}
 .msheet footer{display:flex;gap:.5rem;padding:.7rem 1rem;border-top:1px solid var(--line);flex-wrap:wrap;justify-content:flex-end}
-.lightbox{position:fixed;inset:0;z-index:95;background:rgba(6,12,15,.9);display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:1rem}
-.lightbox img{max-width:96vw;max-height:92vh;object-fit:contain;border-radius:6px}
-.lightbox .close{position:absolute;top:1rem;right:1.2rem;color:#fff;background:rgba(255,255,255,.14);border:none;border-radius:8px;padding:.35rem .8rem;font-size:.85rem}
 
 /* ---------- 社團經營 ---------- */
 .topin{max-width:64rem}
@@ -492,12 +483,9 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
     <footer id="mfoot"></footer>
   </div>
 </div>
-<div class="lightbox" id="lightbox" hidden>
-  <button class="close" id="lbclose">關閉 ✕</button>
-  <img id="lbimg" alt="附圖放大">
-</div>
 
 <script src="reasons.js"></script>
+<script src="posts.js"></script>
 <script>
 /* ================= 施測設定 =================
    GAS_URL：Google Apps Script 網頁應用程式網址（部署後貼上，見 README）
@@ -512,82 +500,22 @@ const STUDY = 'fish12_v2_dev';
 /* ================= 素材 =================
    poster：發文者類型依原始素材來源配對（媒體／機關／公會粉專、個人轉傳）
    kind：page＝粉絲專頁，person＝個人帳號 */
-const POSTS = [
-{id:1, source:"human", correctness:"correct", imgType:"none", facet:"complexity",
- poster:{name:"農漁誌", kind:"page", cat:"新聞與媒體網站", color:"#3D7C5A"}, ago:"3 小時",
- title:"漁電共生行不行？",
- body:"政府推動漁電共生盼達到發電及生產雙贏。水試所指出已針對文蛤、虱目魚、吳郭魚、金目鱸、七星鱸，進行光電設施模擬實驗，初步成果在40%光電設施遮蔽率下可維持原產能70%以上。但漁民認為光電設施進入魚塭後，恐怕會影響原有生產效率、收成方式、曬池效率、水流方向、溶氧等，顯示仍有許多實務面問題得先解決。",
- imgs:[]},
-{id:3, source:"human", correctness:"correct", imgType:"human", facet:"perspective",
- poster:{name:"綠能推動辦公室", kind:"page", cat:"政府機關", color:"#2F6E9E"}, ago:"5 小時",
- title:"烏魚子+綠電共生！誰說漁電共生的光電板下沒有魚？",
- body:"又來到收烏魚採收的季節啦！這次我們來到日運漁電共生室外養殖場，上週五是他們開始放養後第四次採收烏魚了。大量新鮮現流（hiān-lâu）的烏魚隨著運輸車輛傾瀉而下，接著馬上進入烏魚子的加工過程，新鮮的烏魚子呈現鮮豔的黃與橘黃色間，因此有「烏金」的稱呼。\n你能想像這裡原先是一大片廢棄魚塭嗎？經過漁電共生的土地活化再利用，光是這批收成已有近萬尾烏魚、收穫超過三千斤的烏魚子。目前已經取得溯源、產銷履歷，更預計要做出自己漁電共生的品牌，並將漁電共生的養殖技術繼續傳承下去。未來等到案場成功併網後，不僅有烏魚、虱目魚及白蝦等等的水產收益，還有裝置容量達42.9MW的光電板可以發電，可說是一兼二顧，養魚蝦兼發電呢。",
- imgs:["images_posts/img_03a.jpg","images_posts/img_03c.jpg"]},
-{id:5, source:"human", correctness:"correct", imgType:"ai", facet:"inquiry",
- poster:{name:"太陽光電系統同業聯盟", kind:"page", cat:"產業公會", color:"#B0731E"}, ago:"1 天",
- title:"太陽能光電板使用前要先通過20年不破壞的測試",
- body:"民眾擔憂颱風過後，光電板損壞造成養殖魚汙染。專家表示光電板都須過85%高濕度、零下10度到85度極端溫度的環境模擬，展開長時間多次的熱脹冷縮循環，以證明其耐用度經得起考驗。\n台灣有數家光電板廠商做過光電板泡水實驗，將完整及破碎的光電板分別浸泡在魚缸裡7天，再請第三方檢測；實驗發現光電板物質並未滲出，也沒有影響水質，魚缸裡的魚均存活。",
- imgs:["ai_images/guide_05.png"]},
-{id:7, source:"human", correctness:"flawed", imgType:"none", facet:"skepticism",
- poster:{name:"陳秀琴", kind:"person"}, ago:"2 小時",
- title:"颱風過後、請不要買中南部的養殖魚",
- body:"因為太陽能版被颱風吹壞掉到魚池、因為太陽能板破了漏出的粉液、非常毒！\n因為魚吃了毒、可能就被撈起、送到市場、假如人吃了、後果難以想像⋯⋯\n忍耐一下 儘可能不要吃「魚」，因為光電板的汙染超強⋯⋯\n不只池魚，沿海面上的太陽能板，也被吹落海，架子吹上岸了。\n這段時間儘量少吃魚了。",
- imgs:[]},
-{id:9, source:"human", correctness:"flawed", imgType:"human", facet:"complexity",
- poster:{name:"蔡明宏", kind:"person"}, ago:"6 小時",
- title:"讓漁民臉綠掉的綠電？",
- body:"同樣的水，漁電共生池全滅，隔壁一般池都沒事。用蛤的生存條件去想就知道，蛤蜊吃浮游生物和藻類，浮游生物與藻類靠光照生存。光電板遮了光，池底細菌滋生，文蛤沒了陽光殺菌，溫池水溫度又上不來！藻類沒陽光生不出來，食物也沒了，不餓死也病死，想2頭賺錢，門都沒有！",
- imgs:["images_posts/img_09.jpg"]},
-{id:11, source:"human", correctness:"flawed", imgType:"ai", facet:"perspective",
- poster:{name:"南部人講真的", kind:"page", cat:"社群", color:"#C4544F"}, ago:"4 小時",
- title:"知不知道南部為甚麼溫度會特別的高?",
- body:"其中之一的主要原因是南部的綠地,農地,林地及沿岸的魚業養殖場等,全都拿去裝放大鏡了!了不起的光電產業,讓台灣紅通通的。台灣果然亮起來了。",
- imgs:["ai_images/guide_11.png"]},
-{id:13, source:"ai", correctness:"correct", imgType:"none", facet:"inquiry",
- poster:{name:"養殖科普小站", kind:"page", cat:"教育", color:"#2E8B6F"}, ago:"8 小時",
- title:"「光電板下的文蛤一定養不活」？實驗結果沒那麼單純",
- body:"常聽到有人說，魚塭一旦架了光電板，底下的東西就都養不起來。不過水試所的養殖試驗裡，多數物種在四成遮蔭下仍能維持約七成產量，只有文蛤明顯偏低——因為牠靠藻類和浮游生物為食，光照一少，食物就跟著少，除非另外投餌。有意思的是，同一份試驗也發現遮蔭能擋掉部分高溫和強降雨，讓池水鹽度不會驟降，對存活率反而是加分。同一套設計放在不同物種身上，結果並不一樣。",
- imgs:[]},
-{id:15, source:"ai", correctness:"correct", imgType:"human", facet:"skepticism",
- poster:{name:"產經新視角", kind:"page", cat:"新聞與媒體網站", color:"#5F52A0"}, ago:"1 天",
- title:"漁電共生卡住的，有時候不是技術問題",
- body:"沿海漁村的供電設施，很多是幾十年來隨著養殖需求一支一支拉起來的。等到案場進入漁電共生審查，才發現部分既存設施與現行土地使用管制對不上，於是衍生出補程序、甚至要求調整的討論。對在地漁民來說，爭議常常不在光電板本身，而在這些行政細節到底由誰負責、要處理多久。制度跟不上現場，往往比技術問題更難解。",
- imgs:["images_posts/img_15.jpg"]},
-{id:17, source:"ai", correctness:"correct", imgType:"ai", facet:"complexity",
- poster:{name:"能源科技研究室", kind:"page", cat:"科學與技術", color:"#1F7A8C"}, ago:"2 天",
- title:"光電板下面，魚要怎麼養？",
- body:"這個問題的關鍵，常常在於機具進不進得去。魚塭收成需要動用怪手和吊車，如果立柱太密、架得太矮，作業空間就被壓縮，漁民自然不願意配合。因此案場在設計階段會把立柱架高、跨距拉開，池邊也保留機具進出與停放的空間。不過這些配置多半來自養殖現場累積的實務建議，並不是全國統一的法定規格，各案場的條件仍有落差。",
- imgs:["ai_images/guide_17.png"]},
-{id:19, source:"ai", correctness:"flawed", imgType:"none", facet:"perspective",
- poster:{name:"黃志豪", kind:"person"}, ago:"7 小時",
- title:"說好的遮蔽率40%呢？",
- body:"當初審查講得多好聽，遮蔽率上限四成，板子底下照樣養得出東西。現在去沿海走一趟就知道，一口一口的魚塭，水面被蓋得密密麻麻，哪來的四成？連對岸做漁光互補都規定不能超過四成，我們反而放給業者做到滿。魚塭租一租、板子架一架，剩下沒地方養的漁民怎麼辦？沒有人出聲，過幾年就變成理所當然了😢",
- imgs:[]},
-{id:21, source:"ai", correctness:"flawed", imgType:"human", facet:"inquiry",
- poster:{name:"王麗華", kind:"person"}, ago:"1 小時",
- title:"有人空拍傳出來，這就是現在的沿海",
- body:"一望無際的良田、樹林和魚塭，一夕之間全被光電板覆蓋。這是有人空拍下來傳出來的，範圍大到看不到邊。鳥沒有地方停歇，水面反射著刺眼的光，大地在嗚咽。這些板子背後，是多少檯面下不能說的利益？現在喊缺電，等農地魚塭都變成這樣，未來缺的就是糧。悲哉！痛哉！",
- imgs:["images_commons/img_21.png"]},
-{id:23, source:"ai", correctness:"flawed", imgType:"ai", facet:"skepticism",
- poster:{name:"張國雄", kind:"person"}, ago:"40 分鐘",
- title:"太可怕了！鳥喝了一口就倒下",
- body:"看完真的心驚。有人本來在拍這隻漂亮的小鳥，結果錄到牠在光電板下的積水喝了兩口，不到幾秒就整隻翻過去不動了。鳥類神經傳導快，毒性反應也快，那水裡到底有什麼？沿海那些魚塭、蚵田旁邊就是一大片板子，下雨沖下來的水最後都流進池子。這段時間中南部的養殖魚和海鮮還是少碰吧，先轉給家人看，別為了省錢賠上健康。",
- imgs:["ai_images/guide_23.png"]}
-];
+/* 貼文資料在 posts.js（24 篇）；每位受試者依清單 A／B 只看 12 篇。?list=A／B 可指定 */
+const ALL_POSTS = window.POSTS_CONFIG || [];
+const LIST_A_HUMAN = [1,2,5,6,9,10];   /* LIST_A：這些 claim 用 human 版，其餘用 ai 版；LIST_B 相反 */
+const LIST = (function(){
+  const l = (new URLSearchParams(location.search).get('list') || '').toUpperCase();
+  return (l === 'A' || l === 'B') ? l : (Math.random() < 0.5 ? 'A' : 'B');
+})();
+const POSTS = ALL_POSTS.filter(function(p){
+  const humanClaim = LIST_A_HUMAN.indexOf(p.claim_id) >= 0;
+  return p.source === ((LIST === 'A') === humanClaim ? 'human' : 'ai');
+});
 const FACETS = {
   complexity:{label:"複雜性", text:"這件事還牽涉哪些面向與權衡？當成單一原因會漏掉什麼？"},
   perspective:{label:"觀點取替", text:"誰會因此受益、誰受損？這則內容漏掉了誰的立場？"},
   inquiry:{label:"探究", text:"要確認這個說法，還缺哪些資訊？該去哪裡找？"},
   skepticism:{label:"懷疑", text:"這是誰產製的、為什麼現在出現？有沒有相反證據或利益關係？"}
-};
-/* 除錯說明用（含問題 6 則的查核結果） */
-const DEBRIEF = {
-  7:"光電板由玻璃、鋁框和矽晶片組成，破損不會流出有毒的「粉液」。查核單位判定為錯誤訊息。",
-  9:"查核發現，照片中文蛤死亡的池子其實沒有架設光電板。",
-  11:"光電板不會讓整個地區的氣溫升高。查核單位判定為錯誤訊息。",
-  19:"以兩岸案場照片對照遮蔽率的說法，經查核認定有誤導之虞。",
-  21:"這類流傳的空拍影片，經查核實際拍攝於中國廣東，不是台灣沿海。",
-  23:"原本流傳的小鳥影片，經查核是 AI 生成的假影片。"
 };
 
 /* ================= 審核選項（分類） ================= */
@@ -885,7 +813,6 @@ const VNAME = {pass:"放行", warn:"加註提醒後放行", back:"退回"};
 
 /* ================= 共用 ================= */
 const BY = {}; POSTS.forEach(function(p){ BY[p.id] = p; });
-const IMGPOSTS = POSTS.filter(function(p){ return p.imgs.length; });
 const params = new URLSearchParams(location.search);
 const DEV = params.get('dev') === '1';
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -922,7 +849,7 @@ function limitMs(id){ return LIMITS[id]*1000; }
 
 const R = {
   study:STUDY, session:Date.now().toString(36)+Math.random().toString(36).slice(2,8),
-  sid:null, group:GROUP, ssr_reasons:SSR_ON, started:null, finished:null,
+  sid:null, group:GROUP, list:LIST, ssr_reasons:SSR_ON, started:null, finished:null,
   device:{w:window.innerWidth, h:window.innerHeight, ua:navigator.userAgent},
   stage_times:{}, fast_time_limit_ms:T_SEC*1000, fast_time_limits:LIMITS,
   fast_order:null, fast:[], review_order:null, review:[]
@@ -1010,25 +937,17 @@ function posterSub(p){
 }
 function rtagsHtml(p){
   return '<div class="rtags">'
-    + (p.correctness==='correct' ? '<span class="tag ok">正確</span>' : '<span class="tag bad">含問題</span>')
+    + (p.category ? '<span class="tag '+(p.category==='accurate'?'ok':'bad')+'">'+({accurate:'完全沒問題',context:'需補充脈絡',false:'有錯誤訊息'})[p.category]+'</span>' : (p.correctness==='correct' ? '<span class="tag ok">正確</span>' : '<span class="tag bad">含問題</span>'))
     + (p.source==='human' ? '<span class="tag hum">人類撰寫</span>' : '<span class="tag rai">AI 撰寫</span>')
     + '</div>';
 }
-function mediaHtml(p){
-  if (!p.imgs.length) return '';
-  return '<div class="media'+(p.imgs.length>1?' duo':'')+'">' + p.imgs.map(function(s){
-    return '<img src="'+esc(s)+'" alt="貼文附圖" onclick="openLightbox(this.src,'+p.id+')" onload="this.style.flexGrow=this.naturalWidth/this.naturalHeight" onerror="this.remove()">';
-  }).join('') + '</div>';
-}
-
 /* ================= 放大 ================= */
 let modalAssign = null;
 function openModal(id, zones, assignFn){
   const p = BY[id];
   byId('mhead').innerHTML = avHtml(p) + '<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div>'
     + '<button class="btn x" onclick="closeModal()">關閉</button>';
-  byId('mbody').innerHTML = '<h3>'+esc(p.title)+'</h3><div class="full">'+esc(p.body)+'</div>'
-    + (p.imgs.length ? '<div class="mimgs">'+p.imgs.map(function(s){ return '<img src="'+esc(s)+'" alt="貼文附圖" onclick="openLightbox(this.src)" onerror="this.remove()">'; }).join('')+'</div>' : '');
+  byId('mbody').innerHTML = '<h3>'+esc(p.title)+'</h3><div class="full">'+esc(p.body)+'</div>';
   const f = byId('mfoot');
   if (zones){
     modalAssign = assignFn;
@@ -1043,16 +962,9 @@ function openModal(id, zones, assignFn){
 function modalPick(id, key){ if (modalAssign) modalAssign(id, key); closeModal(); }
 function closeModal(){ byId('modal').hidden = true; modalAssign = null; }
 byId('modal').addEventListener('click', function(e){ if (e.target === this) closeModal(); });
-function openLightbox(src, postId){
-  byId('lbimg').src = src; byId('lightbox').hidden = false;
-  if (postId && cur === 'fast' && FS.cur && FS.cur.id === postId) FS.cur.img_zoom++;
-  if (postId && cur === 'review' && RV.cur && RV.cur.id === postId) RV.cur.img_zoom++;
-}
-function closeLightbox(){ byId('lightbox').hidden = true; }
-byId('lightbox').addEventListener('click', closeLightbox);
 document.addEventListener('keydown', function(e){
   if (e.key !== 'Escape') return;
-  if (!byId('lightbox').hidden) closeLightbox(); else if (!byId('modal').hidden) closeModal();
+  if (!byId('modal').hidden) closeModal();
 });
 
 /* ================= 流程 ================= */
@@ -1122,7 +1034,7 @@ function fsRender(){
   const left = FS.order.length - FS.i;
   byId('fsCount').innerHTML = '<span class="flood"><i></i>新貼文持續送審中</span>　待審 '+left+' 則';
   byId('fsBar').style.width = (FS.i/FS.order.length*100)+'%';
-  FS.cur = { id:p.id, position:FS.i+1, shown_at:now(), t0:performance.now(), img_zoom:0, limit_ms:limitMs(p.id) };
+  FS.cur = { id:p.id, position:FS.i+1, shown_at:now(), t0:performance.now(), limit_ms:limitMs(p.id) };
   byId('fsStage').innerHTML =
     '<div class="queue fastq">'
     + '<div class="tbar" id="fsTbar"><i></i></div>'
@@ -1130,7 +1042,6 @@ function fsRender(){
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
     + rtagsHtml(p)
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
-    + mediaHtml(p)
     + '<div class="decide" id="fsDecide">'
     +   '<div class="vbtns fast3">'
     +     '<button class="vbtn pass" data-v="pass">放行<small>沒有疑慮</small></button>'
@@ -1197,7 +1108,7 @@ function fsDecide(v){
   };
 }
 function fsSave(extra){
-  const rec = Object.assign({ id:FS.cur.id, position:FS.cur.position, shown_at:FS.cur.shown_at, img_zoom:FS.cur.img_zoom, limit_ms:FS.cur.limit_ms,
+  const rec = Object.assign({ id:FS.cur.id, position:FS.cur.position, shown_at:FS.cur.shown_at, limit_ms:FS.cur.limit_ms,
   }, extra);
   R.fast.push(rec);
   save();
@@ -1223,50 +1134,50 @@ const RULES = [
 const TIER_TXT = {best:"✓ 判得好", ok:"△ 可以，但還能更好", wrong:"✗ 再想想"};
 const VREC = {pass:"放行", warn:"加註提醒後放行", back:"退回"};
 const INOC = [
- {key:"inocA", post:{id:901, key:"inocA", source:"human", correctness:"flawed", imgType:"none",
+ {key:"inocA", post:{id:901, key:"inocA", source:"human", correctness:"flawed",
    poster:{name:"電力時事通", kind:"page", cat:"新聞與媒體網站", color:"#4A6A8A"}, ago:"1 天",
    title:"台電提醒民眾「在春節假期出遠門時要記得拔插頭」，理由竟然不是省電，而是綠電太多會造成民眾的損失和風險",
    body:"因為今年春節假期長達十天，工廠、商業用電減少，預估用電負載僅1,750萬瓩，用電下降會導致電壓上升。另一方面，秋冬是離岸風電發電全盛期，再生能源滲透率，大年初二有望突破30%。若臨時風力、日照變強，火力機組來不及降載，影響電網穩定性，也會造成電壓飆升，甚至可能升至130伏特。若連續數小時都高過耐壓值範圍，老舊的電器絕緣不佳，可能導致電器損壞，或者更嚴重的是引起電線走火的公共安全問題。",
-   imgs:[]},
+   },
   tiers:{pass:"wrong", warn:"wrong", back:"best"}, rec:"退回", recNote:"",
   lead:"這則的數字大多有出處：台電確實說過春節用電負載約 1,750 萬瓩、電壓可能升到 130 伏特左右，也確實請民眾出遠門時拔插頭。問題出在標題的因果：台電說的主因是<b>假期用電大減</b>，電壓才跟著升高，台電也會降壓運轉；貼文卻把原因說成「綠電太多會造成民眾損失」。文筆專業、數字也是真的，不代表結論是對的。",
   lines:["電壓升高跟用電量大降有關，貼文卻把它講成只有綠電一個原因。","讀者會以為是綠電害自家電器壞掉，對再生能源產生不必要的恐慌。","台電原本怎麼說？調度中心會不會把電壓控制在安全範圍內？","標題用「理由竟然是…」製造反轉，想讓人相信某個結論，而不是單純轉述提醒。"],
   src:"資料來源：Cofacts 查核回應（https://cofacts.tw/article/2fcwa9qymgw70 ）；TechNews 2023-01-15 引述台電說明（https://technews.tw/2023/01/15/electric-power-vacation/ ）。"},
- {key:"inocC", post:{id:903, key:"inocC", source:"human", correctness:"correct", imgType:"none",
+ {key:"inocC", post:{id:903, key:"inocC", source:"human", correctness:"correct",
    poster:{name:"節能生活辦公室", kind:"page", cat:"政府機關", color:"#2F6E9E"}, ago:"6 小時",
    title:"今天是夏月電價的第一天",
    body:"夏月電價1989年推行，每年6至9月實施，主要是反映夏季尖峰用電成本。美、日、英等國都有季節電價設計，藉此引導民眾節電、降低夏季尖峰負載，#全年平均電價並未改變，大家不要相信夏天又漲電價的謠言喔。\n為了夏天能省電、省錢，別讓老舊家電變成吃電怪獸。汰換高效率的冷氣及冰箱，跟夏月使用老舊電器比較，還能幫您省下50%用電量，不只是節能減碳，還幫您省荷包。",
-   imgs:[]},
+   },
   tiers:{pass:"ok", warn:"best", back:"wrong"}, rec:"加註提醒後放行", recNote:"（直接放行也可以）",
   lead:"內容沒有錯，但它是主管機關的宣導，只從政府的角度說明。「全年平均電價沒變」是真的，可是夏月期間每度電比較貴，用電多的家庭帳單還是會變高，這一點貼文沒有提。內容正確就不該退回；只講一面，就值得加註提醒。",
   lines:["平均電價沒變，和「夏天帳單會不會變高」是兩件事。","用電多、家電老舊、沒錢換新家電的家庭，感受會和宣導不一樣。","夏月和非夏月每度差多少？「省下 50%」是跟什麼比？","發文的是推動政策的機關，想說服大家這不是漲價；說得出這個理由才算懷疑，不是看到「政府」兩個字就不信。"],
   src:""},
- {key:"inocB", post:{id:902, key:"inocB", source:"ai", correctness:"correct", imgType:"ai",
+ {key:"inocB", post:{id:902, key:"inocB", source:"ai", correctness:"correct",
    poster:{name:"地方生活誌", kind:"page", cat:"社群", color:"#7A5C3E"}, ago:"3 小時",
    title:"台灣的用電尖峰，已經從白天搬到晚上",
    body:"過去談供電壓力，大家想到的都是正午最熱的時候。隨著光電裝置容量增加，白天日照充足時光電能補上一大塊需求，真正吃緊的反而是太陽下山後那幾個小時。因應方式不只一種：日落前先排程讓燃氣、水力機組上線，搭配儲能和虛擬電廠，再透過時間電價、需量反應請用電大戶把用電挪開，一起分散夜間的負載。",
-   imgs:["ai_images/inoc_902.png"]},
+   },
   tiers:{pass:"best", warn:"best", back:"wrong"}, rec:"放行", recNote:"（加註也可以）",
   lead:"這則的文字和圖片<b>都是 AI 生成的</b>，但內容是對的：光電增加後，供電最吃緊的時段確實移到傍晚以後，貼文列出的因應方式也都是實際在用的做法。「看起來像 AI」不是退回的理由，要看內容本身。",
   lines:["貼文講到不只一種因應方式，沒有把問題講成單一解法。","用電大戶要配合挪開用電時段，貼文也有提到。","想再確認的話，可以查台電的夜尖峰負載資料；但目前寫的內容沒有錯。","地方生活類粉專，一般說明語氣，看不出特定利益。"],
   src:"判讀的重點是<b>內容對不對</b>，不是<b>誰做的、用什麼做的</b>。", srcRaw:true}
 ];
 const RULEP = [
- {key:"ruleA", post:{id:911, key:"ruleA", source:"human", correctness:"correct", imgType:"none",
+ {key:"ruleA", post:{id:911, key:"ruleA", source:"human", correctness:"correct",
    poster:{name:"林佳穎", kind:"person"}, ago:"20 分鐘",
-   title:"週六淨灘活動", body:"這週六早上 9 點在旗津海岸有淨灘活動，自備手套和水壺，結束後一起吃早餐，想參加的留言＋1！", imgs:[]},
+   title:"週六淨灘活動", body:"這週六早上 9 點在旗津海岸有淨灘活動，自備手套和水壺，結束後一起吃早餐，想參加的留言＋1！"},
   tiers:{pass:"best", warn:"ok", back:"wrong"}, rec:"放行", recNote:"（加註也可以）",
   lead:"社團活動、交流內容歡迎張貼，符合社團用途，直接放行即可。這則的語氣友善，時間和地點也都寫得清楚，四條版規逐一對照都沒有問題。",
   lines:["語氣友善、沒有攻擊他人。","不是商業內容，不需要標註。","第一次張貼，沒有重複。","有寫時間和地點，內容完整。"], src:""},
- {key:"ruleB", post:{id:912, key:"ruleB", source:"human", correctness:"correct", imgType:"none",
+ {key:"ruleB", post:{id:912, key:"ruleB", source:"human", correctness:"correct",
    poster:{name:"好物團購站", kind:"page", cat:"購物", color:"#8A5A2E"}, ago:"35 分鐘",
-   title:"電風扇團購開跑", body:"電風扇團購開跑！原價 2,490，團購價 1,690，下單連結在留言區，數量有限。", imgs:[]},
+   title:"電風扇團購開跑", body:"電風扇團購開跑！原價 2,490，團購價 1,690，下單連結在留言區，數量有限。"},
   tiers:{pass:"ok", warn:"best", back:"wrong"}, rec:"加註提醒後放行", recNote:"（直接放行也可以）",
   lead:"商業團購可以張貼，但要加註「非社團合作」。這則是團購，版規要求的標註還沒有寫，所以放行時補上提醒最合適；整則退回就太重了。",
   lines:["語氣沒有問題，也沒有攻擊他人。","這是團購，應該加註說明不是社團合作的活動。","第一次張貼，沒有重複。","不是活動，這一條不適用。"], src:""},
- {key:"ruleC", post:{id:913, key:"ruleC", source:"human", correctness:"correct", imgType:"none",
+ {key:"ruleC", post:{id:913, key:"ruleC", source:"human", correctness:"correct",
    poster:{name:"王俊傑", kind:"person"}, ago:"50 分鐘",
-   title:"二手機車便宜賣", body:"再發一次～二手機車便宜賣，私訊詳談。", imgs:[]},
+   title:"二手機車便宜賣", body:"再發一次～二手機車便宜賣，私訊詳談。"},
   tiers:{pass:"wrong", warn:"wrong", back:"best"}, rec:"退回", recNote:"",
   lead:"同一內容重複張貼屬於洗版，應退回。這位社員已經是第三次張貼同一則二手機車出售文，不管內容本身如何，都不符合版規。",
   lines:["語氣沒有問題，也沒有攻擊他人。","個人二手買賣，不算商業團購，不需要標註。","這是第三次張貼同樣的內容，已經重複。","不是活動，這一條不適用。"], src:""}
@@ -1346,7 +1257,6 @@ function prepShow(){
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
     + (DEV ? rtagsHtml(p) : '')
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
-    + mediaHtml(p)
     + '<div class="decide"><div class="vbtns">'
     +   '<button class="vbtn pass" data-v="pass" aria-pressed="false">放行</button>'
     +   '<button class="vbtn warn" data-v="warn" aria-pressed="false">加註提醒後放行</button>'
@@ -1398,7 +1308,7 @@ function rvRender(){
   byId('rvBar').style.width = (RV.i/RV.order.length*100)+'%';
   RV.verdict = null; RV.chips = [];
   RV.cur = { id:p.id, position:RV.i+1, shown_at:now(), t0:performance.now(), first_click_ms:null,
-             verdict_changes:[], chip_toggles:0, img_zoom:0,
+             verdict_changes:[], chip_toggles:0,
              aid_kind: GROUP === 'treatment' ? 'ssr_tips' : 'rules', aid_events:[] };
   byId('rvStage').innerHTML =
     '<div class="queue">'
@@ -1406,7 +1316,6 @@ function rvRender(){
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
     + rtagsHtml(p)
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
-    + mediaHtml(p)
     + aidBoxHtml()
     + '<div class="decide">'
     +   '<div class="vbtns">'
@@ -1488,7 +1397,6 @@ function rvSubmit(){
   const rec = Object.assign({}, RV.cur, {
     verdict:RV.verdict, reasons:RV.chips.slice(), note: rvOtherText(),
     decision_ms: Math.round(performance.now() - RV.cur.t0),
-    facet_shown: null,
     aid_open_count: RV.cur.aid_events.filter(function(e){ return e.action === 'open'; }).length,
     aid_opened_keys: RV.cur.aid_events.reduce(function(a,e){ if (e.action === 'open' && a.indexOf(e.key) < 0) a.push(e.key); return a; }, [])
   });
@@ -1516,7 +1424,7 @@ function payload(){
     ai_reasons: AI_REASONS,
     reason_config: CFG,
     prep_truth: prepTruth(),
-    truth: POSTS.map(function(p){ return {id:p.id, correctness:p.correctness, source:p.source, imgType:p.imgType, poster_kind:p.poster.kind}; })
+    truth: POSTS.map(function(p){ return {id:p.id, claim_id:p.claim_id, source:p.source, category:p.category, expected:p.expected, poster_kind:p.poster.kind}; })
   }), null, 2);
 }
 
@@ -1528,15 +1436,15 @@ function trialRows(){
     const f = fastOf(p.id) || {}, r = R.review.filter(function(x){ return x.id === p.id; })[0] || {};
     const reasons = r.reasons || [];
     return {
-      post_id:p.id, correctness:p.correctness, source:p.source, img_type:p.imgType, poster_kind:p.poster.kind, facet:p.facet,
+      post_id:p.id, claim_id:p.claim_id, category:p.category, expected:p.expected, list:LIST, source:p.source, poster_kind:p.poster.kind,
       fast_position:f.position, fast_verdict:f.verdict, fast_rt_ms:f.rt_ms, fast_confidence:f.confidence,
-      fast_conf_ms:f.conf_ms, fast_conf_adjust:f.conf_adjust, fast_img_zoom:f.img_zoom,
+      fast_conf_ms:f.conf_ms, fast_conf_adjust:f.conf_adjust,
       rv_position:r.position, rv_verdict:r.verdict, rv_reasons:reasons.join('|'),
       rv_reason_ssr:reasons.map(function(k){ return REASON_MAP[k] || 'other'; }).join('|'),
       rv_reason_ai:reasons.filter(function(k){ return AI_REASONS.indexOf(k) >= 0; }).length,
       rv_note:r.note, rv_first_click_ms:r.first_click_ms, rv_decision_ms:r.decision_ms,
       rv_verdict_changes:r.verdict_changes ? r.verdict_changes.length : null,
-      rv_chip_toggles:r.chip_toggles, rv_img_zoom:r.img_zoom, rv_facet_shown:r.facet_shown,
+      rv_chip_toggles:r.chip_toggles,
       changed:r.changed, shift:r.shift,
       fast_limit_s:LIMITS[p.id], rv_other:reasons.indexOf('other') >= 0
     };
@@ -1598,12 +1506,12 @@ function fastCell(id){
   return esc(VNAME[f.verdict]) + ' <small>'+(f.rt_ms/1000).toFixed(1)+'s／'+f.confidence+'</small>';
 }
 function renderDebrief(){
-  const flawed = POSTS.filter(function(p){ return DEBRIEF[p.id]; });
+  const flawed = POSTS.filter(function(p){ return p.category === 'false'; });
   const ai = POSTS.filter(function(p){ return p.source === 'ai'; });
   byId('debriefBody').innerHTML = '<h2>事後說明</h2>'
     + '<p>謝謝你完成審核。以下說明這次活動中，你看過的內容的真實狀況。</p>'
     + '<h3 style="font-size:1rem;margin:1rem 0 .4rem">含有錯誤訊息的貼文</h3>'
-    + (flawed.length ? '<ul>'+flawed.map(function(p){ return '<li><b>'+esc(p.title)+'</b><br>'+esc(DEBRIEF[p.id])+'</li>'; }).join('')+'</ul>' : '<p>（無）</p>')
+    + (flawed.length ? '<ul>'+flawed.map(function(p){ return '<li><b>'+esc(p.title)+'</b><br>'+esc(p.debrief || '')+'</li>'; }).join('')+'</ul>' : '<p>（無）</p>')
     + '<h3 style="font-size:1rem;margin:1rem 0 .4rem">由 AI 撰寫文字的貼文</h3>'
     + (ai.length ? '<ul>'+ai.map(function(p){ return '<li>'+esc(p.title)+'</li>'; }).join('')+'</ul>' : '<p>（無）</p>')
     + '<h3 style="font-size:1rem;margin:1rem 0 .4rem">關於這個社團</h3>'
@@ -1618,8 +1526,8 @@ function renderEnd(){
   let hit=0, part=0, miss=0, fa=0, cr=0;
   const rows = POSTS.map(function(p){
     const r = R.review.filter(function(x){ return x.id === p.id; })[0];
-    if (r){ if (p.correctness==='flawed'){ if (r.verdict==='back') hit++; else if (r.verdict==='warn') part++; else miss++; } else { if (r.verdict==='back') fa++; else cr++; } }
-    return '<tr><td>#'+p.id+'</td><td>'+(p.correctness==='correct'?'正確':'含問題')+'／'+(p.source==='human'?'人':'AI')+'／'+({none:'無圖',human:'真實圖',ai:'AI圖'})[p.imgType]+'</td>'
+    if (r){ if (p.category==='false'){ if (r.verdict==='back') hit++; else if (r.verdict==='warn') part++; else miss++; } else { if (r.verdict==='back') fa++; else cr++; } }
+    return '<tr><td>#'+p.id+'</td><td>'+'claim '+p.claim_id+'／'+({accurate:'沒問題',context:'需脈絡',false:'有錯誤'})[p.category]+'／'+(p.source==='human'?'人':'AI')+'</td>'
       + '<td>'+fastCell(p.id)+'</td>'
       + '<td>'+(r ? esc(VNAME[r.verdict])+(r.reasons.length?'<br><small>'+esc(r.reasons.map(function(k){ return chipLabel(k, r.verdict); }).join('、'))+'</small>':'') : '—')+'</td>'
       + '<td>'+(r ? (r.decision_ms/1000).toFixed(1)+'s' : '')+'</td></tr>';
@@ -1641,7 +1549,7 @@ function showSetup(){
   byId('suSsr').checked = SSR_ON;
   document.querySelector('input[name="suGroup"][value="'+GROUP+'"]').checked = true;
   list.innerHTML = POSTS.map(function(p){
-    return '<div class="sitem" id="si'+p.id+'"><span class="st" title="'+esc(p.title)+'"><small>#'+p.id+' '+(p.correctness==='correct'?'正確':'含問題')+'</small>'+esc(p.title)+'</span>'
+    return '<div class="sitem" id="si'+p.id+'"><span class="st" title="'+esc(p.title)+'"><small>#'+p.id+' '+({accurate:'沒問題',context:'需脈絡',false:'有錯誤'})[p.category]+'</small>'+esc(p.title)+'</span>'
       + '<input type="range" min="3" max="60" step="1" data-id="'+p.id+'"><span class="sval"></span></div>';
   }).join('');
   function url(){
@@ -1701,11 +1609,11 @@ if (DEV){
     if (!R.sid){ R.sid = 'dev-'+Date.now().toString(36); R.started = now(); }
     const s = e.target.value;
     if (STEPS.indexOf(s) > STEPS.indexOf('fast') && R.fast.length < POSTS.length){
-      R.fast = POSTS.map(function(p,i){ return {id:p.id, position:i+1, verdict:['pass','warn','back','timeout'][i%4], rt_ms:i%4===3?null:4000, confidence:i%4===3?null:(i%5)+1, conf_ms:1500, conf_adjust:1, img_zoom:0}; });
+      R.fast = POSTS.map(function(p,i){ return {id:p.id, position:i+1, verdict:['pass','warn','back','timeout'][i%4], rt_ms:i%4===3?null:4000, confidence:i%4===3?null:(i%5)+1, conf_ms:1500, conf_adjust:1}; });
       FS.order = POSTS.map(function(p){ return p.id; }); FS.i = POSTS.length;
     }
     if (STEPS.indexOf(s) > STEPS.indexOf('review') && R.review.length < POSTS.length){
-      R.review = POSTS.map(function(p,i){ return {id:p.id, position:i+1, verdict:['pass','warn','back'][i%3], reasons:i%3?['in1']:[], note:'', decision_ms:5000, verdict_changes:[], chip_toggles:0, img_zoom:0}; });
+      R.review = POSTS.map(function(p,i){ return {id:p.id, position:i+1, verdict:['pass','warn','back'][i%3], reasons:i%3?['in1']:[], note:'', decision_ms:5000, verdict_changes:[], chip_toggles:0}; });
       RV.order = POSTS.map(function(p){ return p.id; }); RV.i = POSTS.length;
     }
     go(s);

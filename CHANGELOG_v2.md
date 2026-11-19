@@ -66,3 +66,20 @@
 - 事後說明的 AI 清單用現有 `source==='ai'`（目前含 AI 圖的貼文也算），第 2 段改資料模型後需再核對。
 - 受試者畫面的 debrief 頁會列出貼文標題，標題是否含研究用語待第 2 段佔位文字之後檢查。
 - 受試者分組是每次載入重新隨機（重新整理會換組），目前沒有鎖定。
+
+## 第 2 段：貼文資料模型（2026-11-19）
+- 新增 `posts.js`（`window.POSTS_CONFIG`，24 篇佔位，欄位與配對規則寫在檔頭）；index.html 刪除舊 POSTS 與 `DEBRIEF` 常數，改由 `ALL_POSTS`→`POSTS`（依 `LIST` 篩出 12 篇）。`BY`、`LIMITS`、truth、debrief 都只用這 12 篇。
+- `LIST`：`?list=A／B`，否則隨機 50%；`R.list` 記錄。`LIST_A_HUMAN=[1,2,5,6,9,10]`（見下方「與 prompt 不符」）。
+- 貼文 id 慣例：`claim_id*10 + 1（human）／+2（ai）`。
+- 移除圖片程式：`mediaHtml`、`openLightbox`／`closeLightbox`、lightbox DOM 與 CSS、modal 附圖、`IMGPOSTS`、`img_zoom`／`facet_shown`／`fast_img_zoom`／`rv_img_zoom`；INOC 練習移除 `imgs`／`imgType`（含 inocB 的圖）。圖片資料夾保留未刪。
+- `payload().truth`：`{id, claim_id, source, category, expected, poster_kind}`，payload 的 `list` 來自 `R.list`。
+- `trialRows()`：換成 `claim_id, category, expected, list`，移除 `correctness, img_type, facet`。注意 Apps Script 的 T_COLS 仍是舊欄位，新欄位到第 5 段才會有獨立欄。
+- dev 對照表與 setup 頁：改顯示 claim／類別／來源。
+
+### 與 prompt 不符、已自行調整
+- prompt 寫「LIST_A：claim 1–6 human、7–12 ai」又寫「claim 1–4 accurate、5–8 context、9–12 false」，兩者併用會讓 LIST_A 變成 accurate 全是 human、無 ai（每格不是 2 則）。改為 LIST_A 的 human 版取 claim 1,2,5,6,9,10，LIST_B 相反，驗收的「每格 2 則」成立。若你原本有別的配法請告訴我。
+
+### 待後續處理
+- inocB 的解析文字（lead、src）仍寫「文字和圖片都是 AI 生成」，圖片已移除，第 3 段處理。
+- 佔位標題含「human/ai」「類別」字樣，只供測試，正式文字替換前不可給受試者。
+- INOC／RULEP 仍用 `correctness` 欄位（第 3 段改 category）。
