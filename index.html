@@ -356,6 +356,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
   <label><input type="checkbox" id="devTags"> 顯示正確性／撰寫來源標記</label>
   <label><input type="checkbox" id="devSsr" checked> 顯示理由對應的 SSR 面向</label>
   <label>跳到 <select id="devJump"></select></label>
+  <button type="button" id="devClear" class="btn">清除此編號的分派</button>
   <button type="button" id="devSkip" class="btn">跳過第一輪</button>
 </div>
 
@@ -383,6 +384,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
         <input type="text" id="sidInput" autocomplete="off">
       </label>
       <button class="btn primary" id="btnStart">開始</button>
+      <p class="hint" id="startMsg" style="color:var(--bad)"></p>
     </div>
   </section>
 
@@ -399,8 +401,6 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
       <div class="srow"><b>分組</b>
         <label><input type="radio" name="suGroup" value="control" checked> 對照組（不給鷹架）</label>
         <label><input type="radio" name="suGroup" value="treatment"> 鷹架組</label></div>
-      <div class="srow"><b>審核理由</b>
-        <label><input type="checkbox" id="suSsr" checked> 顯示 SSR 面向的理由</label></div>
       <div class="srow"><b>受試者編號</b><input type="text" id="suSid" placeholder="可不填，讓受試者自己輸入"></div>
       <div class="surl" id="suUrl"></div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
@@ -492,8 +492,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
    FAST_SEC：第一輪每則預設秒數。施測條件都用網址參數設定，研究者可開 ?setup=1 用滑桿產生網址：
      t=15            全部貼文 15 秒（3–120）
      tp=7:6,19:20    個別貼文秒數（貼文 id:秒數），沒列到的用 t
-     group=treatment 鷹架組（不填＝對照組）
-     ssr=0           審核理由不顯示 SSR 面向的選項 */
+     group=treatment 鷹架組（不填＝隨機，鷹架組 40%） */
 /* v2-redesign 分支一律送到開發用試算表（不含正式施測的網址）；正式上線前再另行指定 */
 const GAS_URL_DEV = 'https://script.google.com/macros/s/AKfycbwYJyGVa9kgx2z5wVMI6NeecsDu6l-PX1qLK_3MpmUdN_g6OD-x8bRRYJOOQHzFkdWmnA/exec';
 const GAS_URL = GAS_URL_DEV;
@@ -505,14 +504,8 @@ const STUDY = 'fish12_v2_dev';
 /* 貼文資料在 posts.js（24 篇）；每位受試者依清單 A／B 只看 12 篇。?list=A／B 可指定 */
 const ALL_POSTS = window.POSTS_CONFIG || [];
 const LIST_A_HUMAN = [1,2,5,6,9,10];   /* LIST_A：這些 claim 用 human 版，其餘用 ai 版；LIST_B 相反 */
-const LIST = (function(){
-  const l = (new URLSearchParams(location.search).get('list') || '').toUpperCase();
-  return (l === 'A' || l === 'B') ? l : (Math.random() < 0.5 ? 'A' : 'B');
-})();
-const POSTS = ALL_POSTS.filter(function(p){
-  const humanClaim = LIST_A_HUMAN.indexOf(p.claim_id) >= 0;
-  return p.source === ((LIST === 'A') === humanClaim ? 'human' : 'ai');
-});
+let LIST = null;
+const POSTS = [];   /* 依 LIST 在 applyList() 內填入（受試者按開始後才決定清單） */
 const FACETS = {
   complexity:{label:"複雜性", text:"這件事還牽涉哪些面向與權衡？當成單一原因會漏掉什麼？"},
   perspective:{label:"觀點取替", text:"誰會因此受益、誰受損？這則內容漏掉了誰的立場？"},
@@ -541,7 +534,7 @@ function critHtml(){
 document.querySelectorAll('.crit-slot').forEach(function(el){ el.outerHTML = critHtml(); });
 
 /* ================= 共用 ================= */
-const BY = {}; POSTS.forEach(function(p){ BY[p.id] = p; });
+const BY = {};
 const params = new URLSearchParams(location.search);
 const DEV = params.get('dev') === '1';
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -560,30 +553,52 @@ function assignGroup(){
   return Math.random() < 0.4 ? 'treatment' : 'control';
 }
 let GROUP = assignGroup();
-/* 理由是否包含 SSR 面向的選項（ssr=0 只留非 SSR 理由＋「其他」，看受試者會不會自己寫出 SSR 理由） */
-const SSR_ON = params.get('ssr') !== '0';
 
 function okSec(x){ x = Number(x); return (x >= 3 && x <= 120) ? Math.round(x) : null; }
 const T_SEC = okSec(params.get('t')) || FAST_SEC;
 /* 每則貼文的秒數：tp=7:6,19:20 覆寫個別貼文，其餘用 T_SEC */
 const LIMITS = {};
-POSTS.forEach(function(p){ LIMITS[p.id] = T_SEC; });
-(params.get('tp') || '').split(',').forEach(function(s){
-  const kv = s.split(':'), id = Number(kv[0]), sec = okSec(kv[1]);
-  if (BY[id] && sec) LIMITS[id] = sec;
-});
-const LIMIT_VALUES = POSTS.map(function(p){ return LIMITS[p.id]; });
-const SAME_LIMIT = LIMIT_VALUES.every(function(x){ return x === LIMIT_VALUES[0]; });
+let SAME_LIMIT = true;
 function limitMs(id){ return LIMITS[id]*1000; }
+/* 清單：?list=A／B 指定，否則 50:50 隨機 */
+function pickList(){
+  const l = (params.get('list') || '').toUpperCase();
+  return (l === 'A' || l === 'B') ? l : (Math.random() < 0.5 ? 'A' : 'B');
+}
+/* 套用清單：就地重建 POSTS、BY、LIMITS（其他程式都持有同一個物件） */
+function applyList(l){
+  LIST = l;
+  POSTS.length = 0;
+  ALL_POSTS.filter(function(p){
+    const humanClaim = LIST_A_HUMAN.indexOf(p.claim_id) >= 0;
+    return p.source === ((LIST === 'A') === humanClaim ? 'human' : 'ai');
+  }).forEach(function(p){ POSTS.push(p); });
+  Object.keys(BY).forEach(function(k){ delete BY[k]; });
+  Object.keys(LIMITS).forEach(function(k){ delete LIMITS[k]; });
+  POSTS.forEach(function(p){ BY[p.id] = p; LIMITS[p.id] = T_SEC; });
+  (params.get('tp') || '').split(',').forEach(function(s){
+    const kv = s.split(':'), id = Number(kv[0]), sec = okSec(kv[1]);
+    if (BY[id] && sec) LIMITS[id] = sec;
+  });
+  const vals = POSTS.map(function(p){ return LIMITS[p.id]; });
+  SAME_LIMIT = vals.every(function(x){ return x === vals[0]; });
+  document.querySelectorAll('.tl-same').forEach(function(el){ el.hidden = !SAME_LIMIT; });
+  document.querySelectorAll('.tl-var').forEach(function(el){ el.hidden = SAME_LIMIT; });
+}
+applyList(pickList());
 
 const R = {
   study:STUDY, session:Date.now().toString(36)+Math.random().toString(36).slice(2,8),
-  sid:null, group:GROUP, list:LIST, ssr_reasons:SSR_ON, started:null, finished:null,
+  sid:null, group:GROUP, list:LIST, started:null, finished:null, assign_persisted:null, assigned_at:null, reloads:[],
   device:{w:window.innerWidth, h:window.innerHeight, ua:navigator.userAgent},
   stage_times:{}, fast_time_limit_ms:T_SEC*1000, fast_time_limits:LIMITS,
   fast_order:null, fast:[], review_order:null, review:[]
 };
-function save(){ if (R.sid) store(STUDY+'_'+R.session, JSON.stringify(R)); }
+function save(){
+  if (!R.sid) return;
+  const fc = (cur === 'fast' && FS.cur) ? {id:FS.cur.id, position:FS.cur.position, shown_at:FS.cur.shown_at, limit_ms:FS.cur.limit_ms} : null;
+  store(STUDY+'_'+R.session, JSON.stringify({R:R, step:cur, fs_cur:fc}));
+}
 /* 指導語的秒數：各則相同就寫數字，不同就寫「幾秒鐘」 */
 document.querySelectorAll('.tlimit').forEach(function(el){ el.textContent = T_SEC; });
 document.querySelectorAll('.tl-same').forEach(function(el){ el.hidden = !SAME_LIMIT; });
@@ -701,7 +716,7 @@ const STEPS = ['start','brief','fast','mid','review','debrief','end'];  /* setup
 const WIDE = [];
 const PHASE = {fast:'第一輪', mid:'第一輪', review:'二次審核'};
 let cur = 'start';
-function go(step){
+function go(step, resume){
   document.querySelectorAll('.step').forEach(function(el){ el.hidden = true; });
   cur = step;
   byId('s-'+step).hidden = false;
@@ -714,7 +729,7 @@ function go(step){
   if (step === 'fast') commStart();
   if (step === 'end'){ commStop(); if (!R.finished) R.finished = now(); }
   byId('phase').textContent = PHASE[step] || '';
-  R.stage_times[step] = now();
+  if (!(resume && R.stage_times[step])) R.stage_times[step] = now();   /* 重新整理後接續：保留原本的進入時間 */
   if (DEV) byId('devJump').value = step;
   window.scrollTo({top:0});
   if (step === 'fast') fsStart();
@@ -729,10 +744,71 @@ function go(step){
 }
 
 byId('sidInput').value = params.get('sid') || '';
+/* ================= 分派鎖定與中途接續 =================
+   按「開始」輸入 sid 後才決定 group／list，並以 sid 為鍵存起來；同一個 sid 再開一律讀回原本的分派與 session
+   （網址的 ?group=、?list= 不能覆蓋；dev=1 例外）。已完成的 sid 不能重做。 */
+function jget(k){ try{ const t = load(k); return t ? JSON.parse(t) : null; }catch(e){ return null; } }
+function storageOk(){
+  try{ const k = STUDY+'_probe'; localStorage.setItem(k, '1'); const ok = localStorage.getItem(k) === '1'; localStorage.removeItem(k); return ok; }
+  catch(e){ return false; }
+}
+function assignKey(sid){ return STUDY+'_assign_'+sid; }
+function applyAssign(group, list){
+  GROUP = group; R.group = group;
+  applyList(list); R.list = list;
+  if (DEV && byId('devGroup')) byId('devGroup').value = group;
+}
+function saveAssign(){
+  if (!R.assign_persisted || !R.sid) return;
+  store(assignKey(R.sid), JSON.stringify({group:R.group, list:R.list, session:R.session, assigned_at:R.assigned_at}));
+}
+function markFinished(){
+  const a = jget(assignKey(R.sid));
+  if (a){ a.finished = now(); store(assignKey(R.sid), JSON.stringify(a)); }
+}
+/* 從 localStorage 的進度接續：第一輪正在計時的那一則記為 timeout（reason:'reload'），第二輪寫到一半的從該則重做 */
+function resumeFrom(saved){
+  const step = saved.step || 'brief';
+  Object.keys(R).forEach(function(k){ delete R[k]; });
+  Object.assign(R, saved.R);
+  GROUP = R.group; applyList(R.list);
+  R.fast_time_limits = LIMITS;
+  R.assign_persisted = true;
+  R.reloads = (R.reloads || []).concat([{at:now(), step:step}]);
+  if (step === 'fast' && saved.fs_cur && R.fast_order && R.fast_order[R.fast.length] === saved.fs_cur.id){
+    R.fast.push({id:saved.fs_cur.id, position:saved.fs_cur.position, shown_at:saved.fs_cur.shown_at, limit_ms:saved.fs_cur.limit_ms,
+      verdict:'timeout', rt_ms:null, confidence:null, conf_ms:null, conf_adjust:0, reason:'reload'});
+  }
+  /* 重建社團動態（不重複寫入 R.community） */
+  const keep = R.community || {released:[]};
+  R.community = {released:[]};
+  COMM.running = true;
+  R.fast.forEach(function(f){ if (f.verdict === 'pass' || f.verdict === 'warn') releasePost(BY[f.id], f.verdict, []); });
+  R.review.forEach(function(r){ applyFinal(BY[r.id], r.verdict, [], r.open_reason); });
+  R.community = keep;
+  byId('sidInput').value = R.sid;
+  go(step === 'start' ? 'brief' : step, true);
+}
 byId('btnStart').onclick = function(){
   const v = byId('sidInput').value.trim();
-  R.sid = v || ('anon-'+Date.now().toString(36));
+  const sid = v || ('anon-'+Date.now().toString(36));
+  const persist = storageOk();
+  const a = (persist && !DEV && v) ? jget(assignKey(sid)) : null;
+  byId('startMsg').textContent = '';
+  if (a){
+    if (a.finished){ byId('startMsg').textContent = '這個編號已完成作答，不能重複作答。如有疑問請洽研究人員。'; return; }
+    applyAssign(a.group, a.list);
+    const saved = jget(STUDY+'_'+a.session);
+    if (saved && saved.R && saved.R.sid === sid){ resumeFrom(saved); return; }
+    R.session = a.session; R.assigned_at = a.assigned_at;
+  } else {
+    if (!DEV) applyAssign(assignGroup(), pickList());   /* 按開始才抽籤 */
+    R.assigned_at = now();
+  }
+  R.sid = sid;
+  R.assign_persisted = persist;
   R.started = now();
+  saveAssign();
   go('brief');
 };
 byId('btnBrief').onclick = function(){ go('fast'); };
@@ -752,9 +828,9 @@ window.addEventListener('beforeunload', function(e){
 const FS = { order:null, i:0, cur:null, raf:null, deadline:0 };
 function fsStart(){
   if (FS.order) return;
-  FS.order = shuffled(POSTS).map(function(p){ return p.id; });
+  FS.order = R.fast_order ? R.fast_order.slice() : shuffled(POSTS).map(function(p){ return p.id; });   /* 重新整理後接續：沿用原順序 */
   R.fast_order = FS.order.slice();
-  FS.i = 0;
+  FS.i = R.fast.length;
   fsRender();
 }
 function fsRender(){
@@ -780,6 +856,7 @@ function fsRender(){
     + '</div></div>';
   byId('fsStage').querySelectorAll('.vbtn').forEach(function(b){ b.onclick = function(){ fsDecide(b.dataset.v); }; });
   FS.deadline = FS.cur.t0 + FS.cur.limit_ms;
+  save();
   fsTick();
   window.scrollTo({top:0});
 }
@@ -884,7 +961,7 @@ const INOC = [
    title:"台灣的用電尖峰，已經從白天搬到晚上",
    body:"過去談供電壓力，大家想到的都是正午最熱的時候。隨著光電裝置容量增加，白天日照充足時光電能補上一大塊需求，真正吃緊的反而是太陽下山後那幾個小時。因應方式不只一種：日落前先排程讓燃氣、水力機組上線，搭配儲能和虛擬電廠，再透過時間電價、需量反應請用電大戶把用電挪開，一起分散夜間的負載。",
    },
-  lead:"這則的文字和圖片<b>都是 AI 生成的</b>，但內容是對的：光電增加後，供電最吃緊的時段確實移到傍晚以後，貼文列出的因應方式也都是實際在用的做法。「看起來像 AI」不是退回的理由，要看內容本身。",
+  lead:"這則的文字<b>是 AI 生成的</b>，但內容是對的：光電增加後，供電最吃緊的時段確實移到傍晚以後，貼文列出的因應方式也都是實際在用的做法。「看起來像 AI」不是退回的理由，要看內容本身。",
   lines:["貼文講到不只一種因應方式，沒有把問題講成單一解法。","用電大戶要配合挪開用電時段，貼文也有提到。","想再確認的話，可以查台電的夜尖峰負載資料；但目前寫的內容沒有錯。","地方生活類粉專，一般說明語氣，看不出特定利益。"],
   src:"判讀的重點是<b>內容對不對</b>，不是<b>誰做的、用什麼做的</b>。", srcRaw:true}
 ];
@@ -1023,9 +1100,9 @@ function prepPick(v){
 const RV = { order:null, i:0, cur:null, verdict:null, basis:[], text:'' };
 function rvStart(){
   if (RV.order) return;
-  RV.order = shuffled(POSTS).map(function(p){ return p.id; });
+  RV.order = R.review_order ? R.review_order.slice() : shuffled(POSTS).map(function(p){ return p.id; });
   R.review_order = RV.order.slice();
-  RV.i = 0;
+  RV.i = R.review.length;
   rvRender();
 }
 function prevRoundText(id){
@@ -1188,11 +1265,12 @@ function upload(stage){
   const body = JSON.stringify({
     stage:stage, study:STUDY, session:R.session, sid:R.sid, group:R.group, list:R.list, mode:MODE || '', dev:DEV,
     started:R.started, finished:R.finished, time_limit_s:T_SEC,
+    n_reloads:(R.reloads || []).length, assign_persisted:R.assign_persisted,
     n_fast:R.fast.length, n_timeout:R.fast.length - done.length,
     mean_conf: done.length ? +(done.reduce(function(s,x){ return s + x.confidence; }, 0)/done.length).toFixed(2) : '',
     n_review:R.review.length, n_changed:R.review.filter(function(x){ return x.changed; }).length,
     screen:R.device.w+'x'+R.device.h, ua:R.device.ua,
-    ssr_reasons:SSR_ON, time_limits:POSTS.map(function(p){ return p.id+':'+LIMITS[p.id]; }).join(','),
+    time_limits:POSTS.map(function(p){ return p.id+':'+LIMITS[p.id]; }).join(','),
     trials: stage === 'complete' ? trialRows() : null,
     raw: payload()
   });
@@ -1212,7 +1290,7 @@ function upload(stage){
 }
 function upDone(ok, err){
   const msg = byId('upMsg'); if (!msg) return;
-  if (ok){ msg.textContent = '作答紀錄已送出，可以關閉這個頁面了。'; byId('upFallback').hidden = true; return; }
+  if (ok){ markFinished(); msg.textContent = '作答紀錄已送出，可以關閉這個頁面了。'; byId('upFallback').hidden = true; return; }
   msg.textContent = '作答紀錄沒有送出成功（可能是網路問題）。請按「重新送出」；若還是不行，請按「下載作答紀錄」，把檔案交給研究人員。';
   byId('upFallback').hidden = false;
   if (DEV && err) msg.textContent += '（'+err+'）';
@@ -1264,7 +1342,7 @@ function renderEnd(){
       + '<td>'+(r ? (r.decision_ms/1000).toFixed(1)+'s' : '')+'</td></tr>';
   }).join('');
   block.innerHTML = '<div class="reveal"><h4>研究者對照（僅 ?dev=1 顯示）</h4>'
-    + '<p style="font-size:.8rem;color:var(--ink-2)">含問題：退回 '+hit+'・加註 '+part+'・放行 '+miss+'（共 '+(hit+part+miss)+'）　正確被退回 '+fa+'/'+(fa+cr)+'　分組：'+(GROUP==='treatment'?'鷹架組':'對照組')+'　秒數 '+(SAME_LIMIT ? T_SEC : POSTS.map(function(p){ return '#'+p.id+'='+LIMITS[p.id]; }).join(' '))+'　SSR 理由 '+(SSR_ON?'開':'關')+'</p>'
+    + '<p style="font-size:.8rem;color:var(--ink-2)">含問題：退回 '+hit+'・加註 '+part+'・放行 '+miss+'（共 '+(hit+part+miss)+'）　正確被退回 '+fa+'/'+(fa+cr)+'　分組：'+(GROUP==='treatment'?'鷹架組':'對照組')+'　秒數 '+(SAME_LIMIT ? T_SEC : POSTS.map(function(p){ return '#'+p.id+'='+LIMITS[p.id]; }).join(' '))+'</p>'
     + '<div class="tblwrap"><table class="mini"><thead><tr><th>貼文</th><th>實際</th><th>第一輪（秒／把握）</th><th>二次審核</th><th>秒數</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 
@@ -1277,7 +1355,6 @@ function showSetup(){
   all.value = T_SEC;
   POSTS.forEach(function(p){ each[p.id] = LIMITS[p.id]; });
   byId('suEach').open = !SAME_LIMIT;
-  byId('suSsr').checked = SSR_ON;
   document.querySelector('input[name="suGroup"][value="'+GROUP+'"]').checked = true;
   list.innerHTML = POSTS.map(function(p){
     return '<div class="sitem" id="si'+p.id+'"><span class="st" title="'+esc(p.title)+'"><small>#'+p.id+' '+({accurate:'沒問題',context:'需脈絡',false:'有錯誤'})[p.category]+'</small>'+esc(p.title)+'</span>'
@@ -1289,7 +1366,6 @@ function showSetup(){
     const tp = POSTS.filter(function(p){ return each[p.id] !== t; }).map(function(p){ return p.id+':'+each[p.id]; });
     if (tp.length) q.set('tp', tp.join(','));
     if (document.querySelector('input[name="suGroup"]:checked').value === 'treatment') q.set('group', 'treatment');
-    if (!byId('suSsr').checked) q.set('ssr', '0');
     const sid = byId('suSid').value.trim(); if (sid) q.set('sid', sid);
     const qs = q.toString().replace(/%3A/g, ':').replace(/%2C/g, ',');
     return location.origin + location.pathname + (qs ? '?'+qs : '');
@@ -1312,7 +1388,7 @@ function showSetup(){
   list.oninput = function(e){ if (e.target.dataset.id){ each[e.target.dataset.id] = Number(e.target.value); paint(); } };
   byId('suReset').onclick = function(){ POSTS.forEach(function(p){ each[p.id] = Number(all.value); }); paint(); };
   document.querySelectorAll('input[name="suGroup"]').forEach(function(r){ r.onchange = paint; });
-  byId('suSsr').onchange = paint; byId('suSid').oninput = paint;
+  byId('suSid').oninput = paint;
   byId('suCopy').onclick = function(){
     const msg = byId('suMsg');
     try{ navigator.clipboard.writeText(url()).then(function(){ msg.textContent = '已複製'; }, function(){ msg.textContent = '請手動選取上面的網址'; }); }
@@ -1328,6 +1404,13 @@ if (DEV){
   byId('devGroup').value = GROUP;
   byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; if (cur === 'review') rvRender(); if (cur === 'mid') renderPrep(); };
   document.body.classList.add('dev-ssr');
+  byId('devClear').onclick = function(){
+    const sid = (R.sid || byId('sidInput').value.trim());
+    if (!sid){ alert('請先輸入受試者編號'); return; }
+    const a = jget(assignKey(sid));
+    try{ localStorage.removeItem(assignKey(sid)); if (a && a.session) localStorage.removeItem(STUDY+'_'+a.session); }catch(e){}
+    alert('已清除編號「'+sid+'」的分派與進度'+(a ? '' : '（原本沒有紀錄）'));
+  };
   byId('devSsr').onchange = function(e){ document.body.classList.toggle('dev-ssr', e.target.checked); };
   byId('devTags').onchange = function(e){ document.body.classList.toggle('dev-tags', e.target.checked); };
   byId('devJump').innerHTML = STEPS.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');

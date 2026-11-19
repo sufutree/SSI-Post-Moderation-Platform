@@ -25,15 +25,20 @@
 | screen／ua | 文字 | 螢幕尺寸、瀏覽器 | 載入頁面 |
 | time_limits | 文字 | 每則秒數 `id:秒,…` | 第一輪設定 |
 | raw_json | JSON 文字 | 整包資料（上限 49000 字），結構見下表 | 全流程 |
+| n_reloads | 整數 | 中途重新整理的次數（`raw_json.reloads` 的長度） | 接續時 |
+| assign_persisted | 布林 | 分派是否成功存在瀏覽器（false＝儲存功能被擋，無法鎖定／接續） | 按「開始」 |
 
 ## raw_json 結構
 | 鍵 | 內容 | 來源 |
 |---|---|---|
-| study, session, sid, group, list, started, finished, device{w,h,ua}, ssr_reasons | 同上；ssr_reasons 為舊參數殘留，v2 無作用 | 載入／開始 |
+| study, session, sid, group, list, started, finished, device{w,h,ua} | 同上 | 載入／開始 |
+| assigned_at | 分派時間（ISO） | 按「開始」 |
+| assign_persisted | 分派是否存進瀏覽器 | 按「開始」 |
+| reloads[] | 重新整理事件 `{at, step}`（step＝重新整理當時所在步驟） | 接續時 |
 | stage_times | 各步驟（brief, fast, mid, review, debrief, end）開始時間 | go() |
 | fast_time_limit_ms, fast_time_limits | 第一輪限時（毫秒、每則） | 第一輪 |
 | fast_order, review_order | 兩輪貼文呈現順序（post id） | 兩輪 |
-| fast[] | 第一輪每則：id, position, shown_at, limit_ms, verdict（pass/warn/back/timeout）, rt_ms, confidence, conf_ms, conf_adjust | 第一輪 |
+| fast[] | 第一輪每則：id, position, shown_at, limit_ms, verdict（pass/warn/back/timeout）, rt_ms, confidence, conf_ms, conf_adjust；重新整理時正在計時的那一則另有 reason:'reload'（verdict=timeout） | 第一輪 |
 | prep | 第二輪前練習：kind（inoc/rules）, order, items[{key, shown_at, verdict, tier, rt_ms, read_ms}], intro_ms, outro_ms | mid |
 | review[] | 第二輪每則，欄位見下方 | 第二輪 |
 | community | `{released:[{id}]}` 第一輪放行紀錄（無數字） | 第一輪 |

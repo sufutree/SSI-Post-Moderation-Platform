@@ -116,3 +116,19 @@
 - 第二輪：鷹架組輔助欄標題「判讀前想一想」、對照組「社團版規」；dev 下顯示第一輪處置（含逾時文字），不加 dev 時右側為空。
 - 不加 `?dev=1`（treatment/A、control/B 各一，攔截送出）：掃描所有可見畫面，沒有出現 SSR／CX／PT／IN／SK／複雜性／觀點取替／探究／懷疑，也沒有「第一輪：」。dev 模式下出現的 SSR 字樣與「第一輪：」屬研究者標示。
 - 未驗：手機 375px 與電腦的實際畫面、真實總花費時間（模擬無法量測）。
+
+## 第 7 段：鎖定分派、清理殘留（2026-11-19）
+
+### 改前盤點（重新整理的行為）
+- 改前：GROUP、LIST、session 都在頁面載入時決定，重新整理就重抽；R 只寫進 localStorage 從不讀回，所以重新整理＝從頭開始、新 session、可能換組。第一輪結束已送出的 `fast_done` 會留在舊 session，試算表同一個 sid 會出現多列。（有 beforeunload 警告，但擋不住）
+
+### 改後
+- 按「開始」輸入 sid 後才抽籤（`applyAssign(assignGroup(), pickList())`），以 `fish12_v2_dev_assign_<sid>` 存 `{group,list,session,assigned_at}`；`POSTS／BY／LIMITS` 改為可就地重建（`applyList()`）。
+- 同一個 sid 再開：讀回 group／list／session，網址 `?group=`／`?list=` 不能覆蓋；`dev=1` 例外（不讀已存分派、不擋已完成），另有 dev 專用「清除此編號的分派」按鈕。
+- 接續（`resumeFrom`）：從 `fish12_v2_dev_<session>` 讀回 R 與當時步驟，沿用原貼文順序；第一輪正在計時的那一則記 `verdict:'timeout', reason:'reload'` 後顯示下一則；第二輪寫到一半的那一則從頭作答、已完成的不重複；社團動態依紀錄重建；`R.reloads` 記 `{at, step}`；`stage_times` 保留原本進入時間。
+- 完成上傳成功後標記 sid 已完成，再開顯示「這個編號已完成作答」。localStorage 不可用時照常抽籤並記 `assign_persisted:false`（此時無法鎖定與接續）。
+- 清理：移除 `?ssr=0`、setup 頁「SSR 理由」選項、`SSR_ON`、`R.ssr_reasons`（dev 對照表的「SSR 理由」字樣也移除）；README 同步。
+- inocB 解析：改前「這則的文字和圖片**都是 AI 生成的**，但內容是對的…」→ 改後「這則的文字**是 AI 生成的**，但內容是對的…」（其餘不動）。
+- 事後說明頁的 AI 清單：本來就是 `POSTS.filter(source==='ai')` 動態產生，而 POSTS 依該受試者的 LIST 建立，確認非寫死。
+- 資料：新增 `reloads`、`assign_persisted`、`assigned_at`、fast[].reason；`gas/Code_v2.gs` 的 P_COLS 末端新增 `n_reloads`、`assign_persisted`（需重新部署）。
+- 已知限制：第二輪前的練習（prep）中途重新整理會從頭開始；鎖定靠瀏覽器 localStorage，換瀏覽器或裝置同一 sid 會重新抽籤；無痕模式無法鎖定。
