@@ -417,7 +417,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
       <h2>你是這個社團的審核管理員</h2>
       <p>「台灣綠能生活討論區」有一萬兩千多位成員，來自全台各地，有住在南部沿海的養殖戶，也有關心電價、環境與食品安全的一般民眾。成員或粉專想在社團發文，都要先經過管理團隊審核，今晚輪到你值班。</p>
       <p>「漁電共生」是在魚塭上方架設太陽能光電板，讓同一塊地可以一邊養殖水產、一邊發電。這個話題今天突然延燒，大量貼文同時湧進來，每一則你<span class="tl-same">只有 <b class="tlimit">10</b> 秒</span><span class="tl-var" hidden>只有幾秒鐘</span>可以決定：</p>
-      <div class="crit"><div class="crit-t">處置標準：請照這個標準決定，不要憑感覺</div><div class="crit-r pass"><b>放行</b><span>沒有疑慮的貼文</span></div><div class="crit-r warn"><b>加註提醒後放行</b><span>有值得留意的地方，但沒有錯誤資訊</span></div><div class="crit-r back"><b>退回</b><span>含有錯誤資訊</span></div></div>
+      <div class="crit-slot"></div>
       <p>時間到還沒決定的就先跳過。</p>
       <p>每做一個決定，拉一下你對這個決定有多少把握。</p>
       <p>放行的貼文會立刻出現在社團動態。貼文來源很多元，其中也有 AI 生成的內容，就跟一般社群平台一樣。</p>
@@ -439,7 +439,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
     <div class="panel" id="midPanel" hidden>
       <h2>湧入的貼文暫時告一段落</h2>
       <p>現在有時間把剛剛的 12 則重新看一遍，這次不限時間。你可以維持剛才的決定，也可以改變。</p>
-      <div class="crit"><div class="crit-t">處置標準：請照這個標準決定，不要憑感覺</div><div class="crit-r pass"><b>放行</b><span>沒有疑慮的貼文</span></div><div class="crit-r warn"><b>加註提醒後放行</b><span>有值得留意的地方，但沒有錯誤資訊</span></div><div class="crit-r back"><b>退回</b><span>含有錯誤資訊</span></div></div>
+      <div class="crit-slot"></div>
       <p>放行與加註提醒後放行的貼文會出現在社團，加註的下方附上你選的提醒；退回的貼文不會出現，作者會收到你選的理由，已放行的會從社團動態移除。</p>
       <button class="btn primary" id="btnMid">開始二次審核</button>
     </div>
@@ -809,7 +809,19 @@ const REASON_MAP = {}, AI_REASONS = [], LABELS = {warn:{other:'其他'}, back:{o
   }); });
 });
 function chipLabel(k, v){ return (LABELS[v] && LABELS[v][k]) || LABELS.warn[k] || LABELS.back[k] || k; }
-const VNAME = {pass:"放行", warn:"加註提醒後放行", back:"退回"};
+/* 處置標準：所有畫面（說明頁、按鈕小字）都從這裡產生。【待 Sufu 審】 */
+const CRITERIA = {
+  pass:{label:"放行",           full:"內容正確，重要的面向都有交代",                         short:"沒有疑慮"},
+  warn:{label:"加註提醒後放行", full:"內容正確，但漏掉重要的取捨、受影響的人或條件，需要補充脈絡", short:"正確，但需要補充脈絡"},
+  back:{label:"退回",           full:"含有和事實不符的說法，或數字、因果被扭曲（包含誤導、斷章取義）", short:"含有錯誤或誤導"}
+};
+const VNAME = {pass:CRITERIA.pass.label, warn:CRITERIA.warn.label, back:CRITERIA.back.label};
+function critHtml(){
+  return '<div class="crit"><div class="crit-t">處置標準：請照這個標準決定，不要憑感覺</div>'
+    + ['pass','warn','back'].map(function(k){ return '<div class="crit-r '+k+'"><b>'+CRITERIA[k].label+'</b><span>'+CRITERIA[k].full+'</span></div>'; }).join('')
+    + '</div>';
+}
+document.querySelectorAll('.crit-slot').forEach(function(el){ el.outerHTML = critHtml(); });
 
 /* ================= 共用 ================= */
 const BY = {}; POSTS.forEach(function(p){ BY[p.id] = p; });
@@ -1044,9 +1056,9 @@ function fsRender(){
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
     + '<div class="decide" id="fsDecide">'
     +   '<div class="vbtns fast3">'
-    +     '<button class="vbtn pass" data-v="pass">放行<small>沒有疑慮</small></button>'
-    +     '<button class="vbtn warn" data-v="warn">加註提醒<br>後放行<small>值得留意，但沒有錯誤資訊</small></button>'
-    +     '<button class="vbtn back" data-v="back">退回<small>含有錯誤資訊</small></button>'
+    +     '<button class="vbtn pass" data-v="pass">'+CRITERIA.pass.label+'<small>'+CRITERIA.pass.short+'</small></button>'
+    +     '<button class="vbtn warn" data-v="warn">加註提醒<br>後放行<small>'+CRITERIA.warn.short+'</small></button>'
+    +     '<button class="vbtn back" data-v="back">'+CRITERIA.back.label+'<small>'+CRITERIA.back.short+'</small></button>'
     +   '</div>'
     + '</div></div>';
   byId('fsStage').querySelectorAll('.vbtn').forEach(function(b){ b.onclick = function(){ fsDecide(b.dataset.v); }; });
@@ -1118,7 +1130,7 @@ function fastOf(id){ return R.fast.filter(function(x){ return x.id === id; })[0]
 
 /* ================= 第二輪前練習 + 輔助欄 =================
    鷹架組：預防接種（INOC，3 則）＋小撇步（TIPS）；對照組：版規練習（RULEP）＋社團版規（RULES）。
-   兩組結構、位置、互動完全對等，只有內容不同。練習貼文不進 POSTS／BY／IMGPOSTS／truth。 */
+   兩組結構、位置、互動完全對等，只有內容不同。練習貼文不進 POSTS／BY／truth。 */
 const TIPS = [
   {key:"cx", q:"還牽涉哪些取捨？", d:"這件事是不是只講了一個原因？背後有沒有成本、時間或條件上的差別？"},
   {key:"pt", q:"誰會受影響？", d:"有哪些人會被這件事影響？他們的處境，貼文有寫到嗎？"},
@@ -1131,54 +1143,48 @@ const RULES = [
   {key:"r3", q:"勿重複張貼", d:"同一內容一週內請勿重複發文。"},
   {key:"r4", q:"活動附時間地點", d:"活動內容請寫清楚時間與地點。"}
 ];
-const TIER_TXT = {best:"✓ 判得好", ok:"△ 可以，但還能更好", wrong:"✗ 再想想"};
-const VREC = {pass:"放行", warn:"加註提醒後放行", back:"退回"};
+const TIER_TXT = {best:"✓ 判得好", ok:"△ 接近了", wrong:"✗ 再想想"};
+const VREC = VNAME;
 const INOC = [
- {key:"inocA", post:{id:901, key:"inocA", source:"human", correctness:"flawed",
+ {key:"inocA", post:{id:901, key:"inocA", category:"false", source:"human",
    poster:{name:"電力時事通", kind:"page", cat:"新聞與媒體網站", color:"#4A6A8A"}, ago:"1 天",
    title:"台電提醒民眾「在春節假期出遠門時要記得拔插頭」，理由竟然不是省電，而是綠電太多會造成民眾的損失和風險",
    body:"因為今年春節假期長達十天，工廠、商業用電減少，預估用電負載僅1,750萬瓩，用電下降會導致電壓上升。另一方面，秋冬是離岸風電發電全盛期，再生能源滲透率，大年初二有望突破30%。若臨時風力、日照變強，火力機組來不及降載，影響電網穩定性，也會造成電壓飆升，甚至可能升至130伏特。若連續數小時都高過耐壓值範圍，老舊的電器絕緣不佳，可能導致電器損壞，或者更嚴重的是引起電線走火的公共安全問題。",
    },
-  tiers:{pass:"wrong", warn:"wrong", back:"best"}, rec:"退回", recNote:"",
   lead:"這則的數字大多有出處：台電確實說過春節用電負載約 1,750 萬瓩、電壓可能升到 130 伏特左右，也確實請民眾出遠門時拔插頭。問題出在標題的因果：台電說的主因是<b>假期用電大減</b>，電壓才跟著升高，台電也會降壓運轉；貼文卻把原因說成「綠電太多會造成民眾損失」。文筆專業、數字也是真的，不代表結論是對的。",
   lines:["電壓升高跟用電量大降有關，貼文卻把它講成只有綠電一個原因。","讀者會以為是綠電害自家電器壞掉，對再生能源產生不必要的恐慌。","台電原本怎麼說？調度中心會不會把電壓控制在安全範圍內？","標題用「理由竟然是…」製造反轉，想讓人相信某個結論，而不是單純轉述提醒。"],
   src:"資料來源：Cofacts 查核回應（https://cofacts.tw/article/2fcwa9qymgw70 ）；TechNews 2023-01-15 引述台電說明（https://technews.tw/2023/01/15/electric-power-vacation/ ）。"},
- {key:"inocC", post:{id:903, key:"inocC", source:"human", correctness:"correct",
+ {key:"inocC", post:{id:903, key:"inocC", category:"context", source:"human",
    poster:{name:"節能生活辦公室", kind:"page", cat:"政府機關", color:"#2F6E9E"}, ago:"6 小時",
    title:"今天是夏月電價的第一天",
    body:"夏月電價1989年推行，每年6至9月實施，主要是反映夏季尖峰用電成本。美、日、英等國都有季節電價設計，藉此引導民眾節電、降低夏季尖峰負載，#全年平均電價並未改變，大家不要相信夏天又漲電價的謠言喔。\n為了夏天能省電、省錢，別讓老舊家電變成吃電怪獸。汰換高效率的冷氣及冰箱，跟夏月使用老舊電器比較，還能幫您省下50%用電量，不只是節能減碳，還幫您省荷包。",
    },
-  tiers:{pass:"ok", warn:"best", back:"wrong"}, rec:"加註提醒後放行", recNote:"（直接放行也可以）",
   lead:"內容沒有錯，但它是主管機關的宣導，只從政府的角度說明。「全年平均電價沒變」是真的，可是夏月期間每度電比較貴，用電多的家庭帳單還是會變高，這一點貼文沒有提。內容正確就不該退回；只講一面，就值得加註提醒。",
   lines:["平均電價沒變，和「夏天帳單會不會變高」是兩件事。","用電多、家電老舊、沒錢換新家電的家庭，感受會和宣導不一樣。","夏月和非夏月每度差多少？「省下 50%」是跟什麼比？","發文的是推動政策的機關，想說服大家這不是漲價；說得出這個理由才算懷疑，不是看到「政府」兩個字就不信。"],
   src:""},
- {key:"inocB", post:{id:902, key:"inocB", source:"ai", correctness:"correct",
+ {key:"inocB", post:{id:902, key:"inocB", category:"accurate", source:"ai",
    poster:{name:"地方生活誌", kind:"page", cat:"社群", color:"#7A5C3E"}, ago:"3 小時",
    title:"台灣的用電尖峰，已經從白天搬到晚上",
    body:"過去談供電壓力，大家想到的都是正午最熱的時候。隨著光電裝置容量增加，白天日照充足時光電能補上一大塊需求，真正吃緊的反而是太陽下山後那幾個小時。因應方式不只一種：日落前先排程讓燃氣、水力機組上線，搭配儲能和虛擬電廠，再透過時間電價、需量反應請用電大戶把用電挪開，一起分散夜間的負載。",
    },
-  tiers:{pass:"best", warn:"best", back:"wrong"}, rec:"放行", recNote:"（加註也可以）",
   lead:"這則的文字和圖片<b>都是 AI 生成的</b>，但內容是對的：光電增加後，供電最吃緊的時段確實移到傍晚以後，貼文列出的因應方式也都是實際在用的做法。「看起來像 AI」不是退回的理由，要看內容本身。",
   lines:["貼文講到不只一種因應方式，沒有把問題講成單一解法。","用電大戶要配合挪開用電時段，貼文也有提到。","想再確認的話，可以查台電的夜尖峰負載資料；但目前寫的內容沒有錯。","地方生活類粉專，一般說明語氣，看不出特定利益。"],
   src:"判讀的重點是<b>內容對不對</b>，不是<b>誰做的、用什麼做的</b>。", srcRaw:true}
 ];
 const RULEP = [
- {key:"ruleA", post:{id:911, key:"ruleA", source:"human", correctness:"correct",
+ {key:"ruleA", post:{id:911, key:"ruleA", category:"accurate", source:"human",
    poster:{name:"林佳穎", kind:"person"}, ago:"20 分鐘",
    title:"週六淨灘活動", body:"這週六早上 9 點在旗津海岸有淨灘活動，自備手套和水壺，結束後一起吃早餐，想參加的留言＋1！"},
-  tiers:{pass:"best", warn:"ok", back:"wrong"}, rec:"放行", recNote:"（加註也可以）",
   lead:"社團活動、交流內容歡迎張貼，符合社團用途，直接放行即可。這則的語氣友善，時間和地點也都寫得清楚，四條版規逐一對照都沒有問題。",
   lines:["語氣友善、沒有攻擊他人。","不是商業內容，不需要標註。","第一次張貼，沒有重複。","有寫時間和地點，內容完整。"], src:""},
- {key:"ruleB", post:{id:912, key:"ruleB", source:"human", correctness:"correct",
+ {key:"ruleB", post:{id:912, key:"ruleB", category:"context", source:"human",
    poster:{name:"好物團購站", kind:"page", cat:"購物", color:"#8A5A2E"}, ago:"35 分鐘",
    title:"電風扇團購開跑", body:"電風扇團購開跑！原價 2,490，團購價 1,690，下單連結在留言區，數量有限。"},
-  tiers:{pass:"ok", warn:"best", back:"wrong"}, rec:"加註提醒後放行", recNote:"（直接放行也可以）",
   lead:"商業團購可以張貼，但要加註「非社團合作」。這則是團購，版規要求的標註還沒有寫，所以放行時補上提醒最合適；整則退回就太重了。",
   lines:["語氣沒有問題，也沒有攻擊他人。","這是團購，應該加註說明不是社團合作的活動。","第一次張貼，沒有重複。","不是活動，這一條不適用。"], src:""},
- {key:"ruleC", post:{id:913, key:"ruleC", source:"human", correctness:"correct",
+ {key:"ruleC", post:{id:913, key:"ruleC", category:"false", source:"human",
    poster:{name:"王俊傑", kind:"person"}, ago:"50 分鐘",
    title:"二手機車便宜賣", body:"再發一次～二手機車便宜賣，私訊詳談。"},
-  tiers:{pass:"wrong", warn:"wrong", back:"best"}, rec:"退回", recNote:"",
   lead:"同一內容重複張貼屬於洗版，應退回。這位社員已經是第三次張貼同一則二手機車出售文，不管內容本身如何，都不符合版規。",
   lines:["語氣沒有問題，也沒有攻擊他人。","個人二手買賣，不算商業團購，不需要標註。","這是第三次張貼同樣的內容，已經重複。","不是活動，這一條不適用。"], src:""}
 ];
@@ -1208,6 +1214,15 @@ function aidBind(root, onEvent){
   });
 }
 
+/* 練習回饋規則：選到正解＝best（✓）、差一級＝ok（△）、差兩級＝wrong（✗）；建議處置名稱照 CRITERIA */
+const CAT_EXPECT = {accurate:'pass', context:'warn', false:'back'};
+const VLEVEL = {pass:0, warn:1, back:2};
+INOC.concat(RULEP).forEach(function(it){
+  const exp = CAT_EXPECT[it.post.category];
+  it.expected = exp; it.rec = VNAME[exp]; it.recNote = '';
+  it.tiers = {};
+  ['pass','warn','back'].forEach(function(v){ const d = Math.abs(VLEVEL[v] - VLEVEL[exp]); it.tiers[v] = d === 0 ? 'best' : (d === 1 ? 'ok' : 'wrong'); });
+});
 const PREP = { stage:0, items:null, cardAt:0, fbAt:0, stageAt:0, picked:null };
 function prepItems(){
   if (GROUP === 'treatment') return ['inocA','inocC','inocB'].map(function(k){ return INOC.filter(function(x){ return x.key === k; })[0]; });
@@ -1216,7 +1231,7 @@ function prepItems(){
 function prepTruth(){
   return prepItems().map(function(it){
     const best = Object.keys(it.tiers).filter(function(v){ return it.tiers[v] === 'best'; });
-    return {key:it.key, correctness:it.post.correctness, best:best};
+    return {key:it.key, category:it.post.category, expected:it.expected, best:best};
   });
 }
 function renderPrep(){
@@ -1319,9 +1334,9 @@ function rvRender(){
     + aidBoxHtml()
     + '<div class="decide">'
     +   '<div class="vbtns">'
-    +     '<button class="vbtn pass" data-v="pass" aria-pressed="false">放行<small>沒有疑慮</small></button>'
-    +     '<button class="vbtn warn" data-v="warn" aria-pressed="false">加註提醒後放行<small>值得留意，但沒有錯誤資訊</small></button>'
-    +     '<button class="vbtn back" data-v="back" aria-pressed="false">退回<small>含有錯誤資訊</small></button>'
+    +     '<button class="vbtn pass" data-v="pass" aria-pressed="false">'+CRITERIA.pass.label+'<small>'+CRITERIA.pass.short+'</small></button>'
+    +     '<button class="vbtn warn" data-v="warn" aria-pressed="false">'+CRITERIA.warn.label+'<small>'+CRITERIA.warn.short+'</small></button>'
+    +     '<button class="vbtn back" data-v="back" aria-pressed="false">'+CRITERIA.back.label+'<small>'+CRITERIA.back.short+'</small></button>'
     +   '</div>'
     +   '<div id="rvSub"></div>'
     +   '<div class="qfoot"><span class="hint" id="rvHint"></span><button class="btn primary" id="rvSubmit" disabled>送出</button></div>'

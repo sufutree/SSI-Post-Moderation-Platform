@@ -83,3 +83,9 @@
 - inocB 的解析文字（lead、src）仍寫「文字和圖片都是 AI 生成」，圖片已移除，第 3 段處理。
 - 佔位標題含「human/ai」「類別」字樣，只供測試，正式文字替換前不可給受試者。
 - INOC／RULEP 仍用 `correctness` 欄位（第 3 段改 category）。
+
+## 第 3 段：處置標準與練習（2026-11-19）
+- 新增常數 `CRITERIA`（label／full／short），`VNAME` 由它產生；`critHtml()` 取代 s-brief、s-mid 兩處寫死的標準框（HTML 內是 `.crit-slot`，載入時填入）；第一輪、第二輪按鈕小字用 `CRITERIA.*.short`。舊說明句已全部消失。
+- 練習（INOC、RULEP）：每則加 `category`（inocA false／inocC context／inocB accurate；ruleA accurate／ruleB context／ruleC false），刪除手寫的 `tiers`、`rec`、`recNote`，改由 `CAT_EXPECT` 與距離規則統一計算（正解 ✓ 判得好、差一級 △ 接近了、差兩級 ✗ 再想想）。「建議處置：」第一行用 `VNAME`，解析內文未動。
+- `prepTruth()` 輸出改為 `{key, category, expected, best}`；練習貼文仍不進 POSTS／BY／truth。
+- 待處理：inocB 的 lead 仍寫「文字和圖片都是 AI 生成」；inocB 原本「放行或加註都算最好」現在加註只算 △（符合新規則）；RULEP 的 ruleC 標成 false（重複張貼）只為結構同步，內容未改。
