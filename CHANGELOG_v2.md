@@ -89,3 +89,13 @@
 - 練習（INOC、RULEP）：每則加 `category`（inocA false／inocC context／inocB accurate；ruleA accurate／ruleB context／ruleC false），刪除手寫的 `tiers`、`rec`、`recNote`，改由 `CAT_EXPECT` 與距離規則統一計算（正解 ✓ 判得好、差一級 △ 接近了、差兩級 ✗ 再想想）。「建議處置：」第一行用 `VNAME`，解析內文未動。
 - `prepTruth()` 輸出改為 `{key, category, expected, best}`；練習貼文仍不進 POSTS／BY／truth。
 - 待處理：inocB 的 lead 仍寫「文字和圖片都是 AI 生成」；inocB 原本「放行或加註都算最好」現在加註只算 △（符合新規則）；RULEP 的 ruleC 標成 false（重複張貼）只為結構同步，內容未改。
+
+## 第 4 段：第二輪理由流程（2026-11-19）
+- 新增 `basis.js`（`window.BASIS_CONFIG`，9 項，code 只在資料中）；index.html 不再載入 reasons.js（檔案保留），並刪除 `DEFAULT_REASON_CFG`、`CFG`、`REASON_MAP`、`AI_REASONS`、`chipLabel`、`visibleCats`、`ssrTag` 等舊理由機制。
+- `rvPick`／`rvCheck`／`rvSubmit` 改寫：選處置 → 開放理由（必填，≥10 字，`countChars` 只算字母、數字、中文）→ 達 10 字才出現勾選清單（1–3 項，第 4 項按不下去並提示「最多 3 項」）→ 送出。三種處置都走完整流程；提示文字依處置不同。
+- 換處置：保留理由文字、清空勾選；`basis_toggles` 是這一則的累計切換次數（不因換處置歸零）。
+- 選項順序：每則貼文重新隨機（`basis_order`），同一則內換處置時順序不變。
+- 社團動態的加註提醒 = 受試者寫的開放理由。
+- 每則紀錄：`open_reason, open_reason_len, open_first_key_ms, open_done_ms, basis, basis_codes, basis_order, basis_toggles`；已移除 `reasons, chip_toggles, note`、`rv_other`、`n_other`；payload 附 `basis_config`，不再有 `reason_map/ai_reasons/reason_config`。trialRows 對應 `rv_open_*`、`rv_basis*`。
+- 措辭比對（basis label vs TIPS 的 q 與 d）：其餘皆無重複詞組；唯一重疊是「受這件事影響的人」與 TIPS「pt」說明文字「有哪些人會被這件事影響？」共用「這件事影響」；與問句「誰會受影響？」只共用「影響」二字。
+- 待處理：`ssr=0` 參數與 setup 頁的「SSR 理由」選項已無作用；`ssr_reasons` 欄位仍在 payload；Apps Script 欄位待第 5 段。
