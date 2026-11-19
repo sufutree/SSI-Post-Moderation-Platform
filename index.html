@@ -429,7 +429,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
       <div class="crit"><div class="crit-t">處置標準：請照這個標準決定，不要憑感覺</div><div class="crit-r pass"><b>放行</b><span>沒有疑慮的貼文</span></div><div class="crit-r warn"><b>加註提醒後放行</b><span>有值得留意的地方，但沒有錯誤資訊</span></div><div class="crit-r back"><b>退回</b><span>含有錯誤資訊</span></div></div>
       <p>時間到還沒決定的就先跳過。</p>
       <p>每做一個決定，拉一下你對這個決定有多少把握。</p>
-      <p>放行的貼文會立刻出現在社團動態，上方會顯示社團的成員數和今天的互動。貼文來源很多元，其中也有 AI 生成的內容，就跟一般社群平台一樣。</p>
+      <p>放行的貼文會立刻出現在社團動態。貼文來源很多元，其中也有 AI 生成的內容，就跟一般社群平台一樣。</p>
       <button class="btn primary" id="btnBrief">開始</button>
     </div>
   </section>
@@ -464,6 +464,11 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
     <h3>社團動態<span id="feedCount">0 則</span></h3>
     <div class="feedlist" id="feedList"><p class="fempty">你放行的貼文會出現在這裡</p></div>
   </aside>
+
+  <!-- 事後說明 -->
+  <section class="step" id="s-debrief" hidden>
+    <div class="panel" id="debriefBody"></div>
+  </section>
 
   <section class="step" id="s-end" hidden>
     <div class="panel">
@@ -503,7 +508,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
      ssr=0           審核理由不顯示 SSR 面向的選項 */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzHvEqq0uoveAuRUBrUHz9IH8hnbSyBIZJWzaLVAuKV9B-lDulhjf45frmw_K8R6EmZbA/exec';
 const FAST_SEC = 10;
-const STUDY = 'fish12_pretest_v1';
+const STUDY = 'fish12_v2_dev';
 /* ================= 素材 =================
    poster：發文者類型依原始素材來源配對（媒體／機關／公會粉專、個人轉傳）
    kind：page＝粉絲專頁，person＝個人帳號 */
@@ -890,8 +895,15 @@ function now(){ return new Date().toISOString(); }
 function store(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
 function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 
-/* 預測驗預設全部是對照組（不給鷹架）；要看鷹架版加 ?group=treatment */
-let GROUP = params.get('group') === 'treatment' ? 'treatment' : 'control';
+/* 分組：?group=treatment／control 手動指定；?mode=pilot 全部對照組；否則隨機（鷹架組 40%、對照組 60%） */
+const MODE = params.get('mode');
+function assignGroup(){
+  const g = params.get('group');
+  if (g === 'treatment' || g === 'control') return g;
+  if (MODE === 'pilot') return 'control';
+  return Math.random() < 0.4 ? 'treatment' : 'control';
+}
+let GROUP = assignGroup();
 /* 理由是否包含 SSR 面向的選項（ssr=0 只留非 SSR 理由＋「其他」，看受試者會不會自己寫出 SSR 理由） */
 const SSR_ON = params.get('ssr') !== '0';
 
@@ -942,31 +954,17 @@ function addMembers(n){
 function commStart(){
   if (COMM.running) return;
   COMM.running = true;
-  R.community = { members_start:COMM.members, released:[] };
-  (function noise(){
-    if (!COMM.running) return;
-    if (Math.random() < .6) addMembers(1);
-    COMM.timers.push(setTimeout(noise, randInt(14000, 26000)));
-  })();
-  COMM.timers.push(setInterval(commTick, 1100));
+  R.community = { released:[] };
 }
 function commStop(){
   COMM.running = false;
-  COMM.timers.forEach(function(t){ clearTimeout(t); clearInterval(t); });
-  COMM.timers = [];
-  if (R.community){ R.community.members_end = COMM.members; R.community.likes_end = COMM.likes; }
 }
 function releasePost(p, verdict, reasons){
-  const item = { id:p.id, verdict:verdict, reasons:reasons, likes:0, cmts:0, shares:0,
-    target:{ likes:randInt(28,62), cmts:randInt(2,11), shares:randInt(1,7) }, born:performance.now() };
+  const item = { id:p.id, verdict:verdict, reasons:reasons, born:performance.now() };
   COMM.live.unshift(item);
-  R.community.released.push({id:p.id, target:item.target});
+  R.community.released.push({id:p.id});
   renderFeedItem(item, true);
   byId('feedCount').textContent = COMM.live.length+' 則';
-  COMM.timers.push(setTimeout(function(){
-    const n = randInt(1,4);
-    addMembers(n);
-  }, randInt(2500, 5000)));
 }
 /* 二次審核的最終處置套用到社團動態：退回＝移除，加註＝補上提醒，未放行過的＝放行 */
 function applyFinal(p, verdict, reasons, note){
@@ -977,22 +975,6 @@ function applyFinal(p, verdict, reasons, note){
   const el = byId('fi-'+it.id);
   if (el){ el.innerHTML = fitemHtml(it); el.classList.toggle('removed', !!it.removed); }
 }
-function commTick(){
-  COMM.live.forEach(function(it){
-    if (it.removed) return;
-    const age = (performance.now() - it.born)/1000;
-    if (age < 1.5) return;
-    let changed = false;
-    if (it.likes < it.target.likes && Math.random() < .75){
-      const d = Math.min(it.target.likes - it.likes, randInt(1,4));
-      it.likes += d; COMM.likes += d; changed = true;
-    }
-    if (it.cmts < it.target.cmts && Math.random() < .2){ it.cmts++; changed = true; }
-    if (it.shares < it.target.shares && Math.random() < .12){ it.shares++; changed = true; }
-    if (changed) renderFeedItem(it, false);
-  });
-  paintStats();
-}
 function fitemHtml(it){
   const p = BY[it.id];
   const age = Math.round((performance.now() - it.born)/60000);
@@ -1000,7 +982,7 @@ function fitemHtml(it){
     + '<div class="ft">'+esc(p.title)+'</div>'
     + (it.removed ? '<div class="frm">已由你移除</div>'
        : (it.verdict === 'warn' ? '<div class="fw">⚠ 管理員提醒：'+(function(){ const t = it.reasons.filter(function(k){ return k !== 'other'; }).map(function(k){ return chipLabel(k,'warn'); }).concat(it.note ? [it.note] : []); return t.length ? esc(t.join('、')) : '請留意這則內容'; })()+'</div>' : ''))
-    + '<div class="fc"><span>👍 <b class="fcnt" data-k="likes">'+it.likes+'</b></span><span>留言 <b class="fcnt" data-k="cmts">'+it.cmts+'</b></span><span>分享 <b class="fcnt" data-k="shares">'+it.shares+'</b></span></div>';
+    ;
 }
 function renderFeedItem(it, isNew){
   const list = byId('feedList');
@@ -1013,10 +995,6 @@ function renderFeedItem(it, isNew){
     return;
   }
   const el = byId('fi-'+it.id); if (!el) return;
-  el.querySelectorAll('.fcnt').forEach(function(c){
-    const v = String(it[c.dataset.k]);
-    if (c.textContent !== v){ c.textContent = v; flash(c); }
-  });
   const age = Math.round((performance.now() - it.born)/60000);
   el.querySelector('small').textContent = age < 1 ? '剛剛' : age+' 分鐘';
 }
@@ -1078,7 +1056,7 @@ document.addEventListener('keydown', function(e){
 });
 
 /* ================= 流程 ================= */
-const STEPS = ['start','brief','fast','mid','review','end'];  /* setup 是研究者頁，不在流程內 */
+const STEPS = ['start','brief','fast','mid','review','debrief','end'];  /* setup 是研究者頁，不在流程內 */
 const WIDE = [];
 const PHASE = {fast:'第一輪', mid:'第一輪', review:'二次審核'};
 let cur = 'start';
@@ -1090,7 +1068,7 @@ function go(step){
   const duo = step === 'fast' || step === 'review';
   byId('wrap').classList.toggle('duo', duo);
   byId('feedPanel').hidden = !duo;
-  const showStats = ['brief','fast','mid','review'].indexOf(step) >= 0;
+  const showStats = false;  /* v2：不顯示成員數與互動數字 */
   ['statsBox','statsBox2','statsBox3'].forEach(function(id){ byId(id).hidden = !showStats; });
   if (step === 'fast') commStart();
   if (step === 'end'){ commStop(); if (!R.finished) R.finished = now(); }
@@ -1101,6 +1079,7 @@ function go(step){
   if (step === 'fast') fsStart();
   if (step === 'mid') renderPrep();
   if (step === 'review') rvStart();
+  if (step === 'debrief') renderDebrief();
   if (step === 'end') renderEnd();
   save();
   /* 第一輪結束先送一次（中途離開也留得到第一輪），完成時再送完整版（試算表以 session 覆寫） */
@@ -1219,7 +1198,7 @@ function fsDecide(v){
 }
 function fsSave(extra){
   const rec = Object.assign({ id:FS.cur.id, position:FS.cur.position, shown_at:FS.cur.shown_at, img_zoom:FS.cur.img_zoom, limit_ms:FS.cur.limit_ms,
-    members_at_decision:COMM.members, likes_at_decision:COMM.likes }, extra);
+  }, extra);
   R.fast.push(rec);
   save();
 }
@@ -1413,7 +1392,7 @@ function prevRoundText(id){
   return '第一輪：' + VNAME[f.verdict];
 }
 function rvRender(){
-  if (RV.i >= RV.order.length){ go('end'); return; }
+  if (RV.i >= RV.order.length){ go('debrief'); return; }
   const p = BY[RV.order[RV.i]];
   byId('rvCount').textContent = '二次審核 '+(RV.i+1)+' / '+RV.order.length;
   byId('rvBar').style.width = (RV.i/RV.order.length*100)+'%';
@@ -1423,7 +1402,7 @@ function rvRender(){
              aid_kind: GROUP === 'treatment' ? 'ssr_tips' : 'rules', aid_events:[] };
   byId('rvStage').innerHTML =
     '<div class="queue">'
-    + '<div class="qhead"><span>二次審核</span><span class="right prevround">'+prevRoundText(p.id)+'</span></div>'
+    + '<div class="qhead"><span>二次審核</span><span class="right prevround">'+(DEV ? prevRoundText(p.id) : '')+'</span></div>'
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
     + rtagsHtml(p)
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
@@ -1511,8 +1490,7 @@ function rvSubmit(){
     decision_ms: Math.round(performance.now() - RV.cur.t0),
     facet_shown: null,
     aid_open_count: RV.cur.aid_events.filter(function(e){ return e.action === 'open'; }).length,
-    aid_opened_keys: RV.cur.aid_events.reduce(function(a,e){ if (e.action === 'open' && a.indexOf(e.key) < 0) a.push(e.key); return a; }, []),
-    members_at_submit: COMM.members, likes_at_submit: COMM.likes
+    aid_opened_keys: RV.cur.aid_events.reduce(function(a,e){ if (e.action === 'open' && a.indexOf(e.key) < 0) a.push(e.key); return a; }, [])
   });
   const f = fastOf(p.id);
   rec.stage1_verdict = f ? f.verdict : 'timeout';
@@ -1618,6 +1596,20 @@ function fastCell(id){
   if (!f) return '—';
   if (f.verdict === 'timeout') return '<span class="tag un">逾時</span>';
   return esc(VNAME[f.verdict]) + ' <small>'+(f.rt_ms/1000).toFixed(1)+'s／'+f.confidence+'</small>';
+}
+function renderDebrief(){
+  const flawed = POSTS.filter(function(p){ return DEBRIEF[p.id]; });
+  const ai = POSTS.filter(function(p){ return p.source === 'ai'; });
+  byId('debriefBody').innerHTML = '<h2>事後說明</h2>'
+    + '<p>謝謝你完成審核。以下說明這次活動中，你看過的內容的真實狀況。</p>'
+    + '<h3 style="font-size:1rem;margin:1rem 0 .4rem">含有錯誤訊息的貼文</h3>'
+    + (flawed.length ? '<ul>'+flawed.map(function(p){ return '<li><b>'+esc(p.title)+'</b><br>'+esc(DEBRIEF[p.id])+'</li>'; }).join('')+'</ul>' : '<p>（無）</p>')
+    + '<h3 style="font-size:1rem;margin:1rem 0 .4rem">由 AI 撰寫文字的貼文</h3>'
+    + (ai.length ? '<ul>'+ai.map(function(p){ return '<li>'+esc(p.title)+'</li>'; }).join('')+'</ul>' : '<p>（無）</p>')
+    + '<h3 style="font-size:1rem;margin:1rem 0 .4rem">關於這個社團</h3>'
+    + '<p>「台灣綠能生活討論區」和裡面所有的發文者都是虛構的，貼文是為了這次研究準備的。你的處置不會對任何真實的人或社團造成影響。</p>'
+    + '<button class="btn primary" id="btnDebriefDone">完成</button>';
+  byId('btnDebriefDone').onclick = function(){ go('end'); };
 }
 function renderEnd(){
   const block = byId('revealBlock');

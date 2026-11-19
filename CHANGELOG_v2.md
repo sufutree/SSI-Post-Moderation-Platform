@@ -53,3 +53,16 @@
 2. 現況沒有 debrief 步驟與 s-debrief；DEBRIEF 常數存在。
 3. GAS_URL 目前是單一正式網址（硬寫在 504 行），第 5 段 GAS_URL_DEV 要在這裡改。
 4. 沒有 ?list 參數與 posts.js（POSTS 直接寫在 index.html）。
+
+## 第 1 段：四個獨立問題（2026-11-19）
+1. 移除放行獎勵：`commStart`／`releasePost`／`commStop` 改寫，刪除 `addMembers`、`commTick` 與成員數雜訊計時；社團動態只顯示標題與管理員提醒，不再有按讚／留言／分享；`go()` 內 `showStats=false` 永遠隱藏 statsBox／2／3；s-brief 該句已刪。R.community 只剩 `released:[{id}]`；`members_at_decision`、`likes_at_decision`、`members_at_submit`、`likes_at_submit` 欄位已移除。
+2. `rvRender` 的 `.prevround` 只在 `?dev=1` 顯示 `prevRoundText()`。
+3. 新增 `debrief` 步驟（STEPS、`#s-debrief`、`renderDebrief()`）；第二輪最後一則後進 debrief，按「完成」才 `go('end')`（送出時機不變）。
+4. 分組：`assignGroup()`，指定 > `?mode=pilot`（全 control）> 隨機 40% treatment；`STUDY='fish12_v2_dev'`。
+
+### 未處理、供後續段落注意
+- `renderFeedItem` 的「非新增」分支現在只更新時間文字，且沒有人呼叫；CSS 還留著 `.fc`、`.fcnt`、`.gstat` 樣式（無害）。
+- 開發用 `devJump` 的假資料仍含 `img_zoom`、`chip_toggles` 等舊欄位（第 2、4 段處理）。
+- 事後說明的 AI 清單用現有 `source==='ai'`（目前含 AI 圖的貼文也算），第 2 段改資料模型後需再核對。
+- 受試者畫面的 debrief 頁會列出貼文標題，標題是否含研究用語待第 2 段佔位文字之後檢查。
+- 受試者分組是每次載入重新隨機（重新整理會換組），目前沒有鎖定。
