@@ -144,3 +144,9 @@
 ### 第 8 段補：F5 已補上（2026-11-20）
 - 內容檔更新後重新產生 posts.js：P12H（人類版）補上原文、`pending:false`；P12A 的 title、body、debrief 也有更新。其餘 22 篇不變。
 - 重跑比對：24/24 與 JSON 逐字一致；A、B 清單檢查全部通過；已無待補貼文，console 與 dev 畫面的「待補」警告消失。
+
+## 第 9 段：判斷依據至少選 1 項＋dev 顯示清單與版本（2026-11-20）
+- 勾選：題目改「（至少選 1 項）」；刪除 `BASIS_MAX` 與第 4 項按不下去的限制，9 項都可勾；沒勾提示「請至少選 1 項」。新增欄位 `basis_n`（trials：`rv_basis_n`，T_COLS 已加，需重新部署 Apps Script）。改過的位置：index.html（常數、題目、chip 點擊、`rvCheck`、`rvSubmit`、`trialRows`）、gas/Code_v2.gs、DATA_DICTIONARY_v2.md；basis.js、說明頁、練習頁原本就沒有數量描述。
+- 診斷（dev 看不出 LIST A／B）：不是佔位內容（第 8 段後已是正式內容）、也不是網址參數被蓋掉（dev 本來就不讀已存分派，`?list=` 有效）、清單規則也正確（A、B 抽到不同的 12 篇）。原因是 dev 模式沒有顯示任何可辨識版本的資訊（list 不顯示、既有的「正確性／撰寫來源標記」只標對錯與人/AI，不標 claim、類別、清單）。
+- dev 專屬（不加 `?dev=1` 完全不出現）：頂端資訊列（sid、group、LIST、分派來源、待補篇數）、每張審核卡右上角標籤 `claim N｜human/ai｜類別｜material_code`（human 藍、ai 紫）、「切到 LIST A／B」按鈕（以目前 group＋新 list 重新載入）。
+- dev 不再寫入分派紀錄（`saveAssign`、`markFinished` 在 dev 直接略過），避免汙染同 sid 的正式資料。

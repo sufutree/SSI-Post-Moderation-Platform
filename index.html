@@ -104,6 +104,13 @@ textarea{width:100%;font-size:.88rem;border:1px solid var(--line);border-radius:
 .pm{flex:1;min-width:0}
 .pn{font-weight:500;font-size:.93rem;line-height:1.35}
 .ps{font-size:.72rem;color:var(--ink-3)}
+.devinfo{flex:0 0 100%;font-size:.78rem;font-weight:700;line-height:1.6;color:var(--ink)}
+.devinfo i{font-style:normal;border-radius:4px;padding:0 .35rem;margin-right:.3rem}
+.devinfo i.lst{background:var(--ink);color:var(--surface)}
+.devlabelrow{text-align:right;padding:.3rem .6rem 0}
+.devlabel{display:inline-block;font-size:.68rem;font-weight:700;border-radius:4px;padding:.05rem .45rem;border:1px solid}
+.devlabel.human{color:#1F6E8C;background:#E3F2F8;border-color:#1F6E8C}
+.devlabel.ai{color:#8A3FA0;background:#F3E8F8;border-color:#8A3FA0}
 .pendingtag{margin:.2rem 1rem .4rem;padding:.3rem .6rem;border:2px dashed var(--bad);color:var(--bad);background:var(--bad-soft);border-radius:8px;font-size:.78rem;font-weight:700}
 #devWarn{background:var(--bad-soft);color:var(--bad);border-bottom:2px solid var(--bad);padding:.4rem 1rem;font-size:.78rem;line-height:1.6;white-space:pre-wrap}
 .pb{padding:.1rem 1rem .7rem;color:var(--ink);font-size:.92rem;white-space:pre-wrap;line-height:1.8}
@@ -354,12 +361,15 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
 
 <div id="devWarn" hidden></div>
 <div class="devbar" id="devbar" hidden>
+  <div class="devinfo" id="devInfo"></div>
   <b>研究者</b>
   <label>分組 <select id="devGroup"><option value="treatment">鷹架組</option><option value="control">對照組</option></select></label>
   <label><input type="checkbox" id="devTags"> 顯示正確性／撰寫來源標記</label>
   <label><input type="checkbox" id="devSsr" checked> 顯示理由對應的 SSR 面向</label>
   <label>跳到 <select id="devJump"></select></label>
   <button type="button" id="devClear" class="btn">清除此編號的分派</button>
+  <button type="button" id="devListA" class="btn">切到 LIST A</button>
+  <button type="button" id="devListB" class="btn">切到 LIST B</button>
   <button type="button" id="devSkip" class="btn">跳過第一輪</button>
 </div>
 
@@ -508,6 +518,7 @@ const STUDY = 'fish12_v2_dev';
 const ALL_POSTS = window.POSTS_CONFIG || [];
 const LISTS = window.LISTS_CONFIG || {};   /* 兩份清單的唯一設定來源（posts.js）；其他地方一律讀這裡，不自己算 */
 let LIST = null;
+let ASSIGN_SRC = 'new';   /* 這次分派：new＝新抽（或 dev 網址指定）、restored＝從 sid 讀回 */
 const POSTS = [];   /* 依 LIST 在 applyList() 內填入（受試者按開始後才決定清單） */
 const FACETS = {
   complexity:{label:"複雜性", text:"這件事還牽涉哪些面向與權衡？當成單一原因會漏掉什麼？"},
@@ -519,7 +530,7 @@ const FACETS = {
 /* ================= 第二輪：考慮面向（basis.js） ================= */
 const BASIS = (window.BASIS_CONFIG || []).slice();
 const BASIS_BY = {}; BASIS.forEach(function(b){ BASIS_BY[b.id] = b; });
-const OPEN_MIN = 10, BASIS_MAX = 3;
+const OPEN_MIN = 10;
 /* 字數：中文字、英文字母、數字各算一個；空白與標點不算 */
 function countChars(t){ const m = String(t || '').match(/[\p{L}\p{N}]/gu); return m ? m.length : 0; }
 /* 處置標準：所有畫面（說明頁、按鈕小字）都從這裡產生。【待 Sufu 審】 */
@@ -710,6 +721,9 @@ function avHtml(p){
 function posterSub(p){
   return p.poster.kind === 'page' ? '粉絲專頁・'+esc(p.poster.cat) : '社團成員';
 }
+function devLabel(p){
+  return DEV ? '<div class="devlabelrow"><span class="devlabel '+p.source+'">claim '+p.claim_id+'｜'+p.source+'｜'+p.category+'｜'+esc(p.material_code || '')+'</span></div>' : '';
+}
 function pendingTag(p){ return (DEV && p.pending) ? '<div class="pendingtag">⚠ 待補：這篇還是佔位文字（'+esc(p.post_code || p.id)+'）</div>' : ''; }
 function rtagsHtml(p){
   return '<div class="rtags">'
@@ -762,7 +776,7 @@ function go(step, resume){
   if (step === 'end'){ commStop(); if (!R.finished) R.finished = now(); }
   byId('phase').textContent = PHASE[step] || '';
   if (!(resume && R.stage_times[step])) R.stage_times[step] = now();   /* 重新整理後接續：保留原本的進入時間 */
-  if (DEV) byId('devJump').value = step;
+  if (DEV){ byId('devJump').value = step; if (window.updateDevInfo) window.updateDevInfo(); }
   window.scrollTo({top:0});
   if (step === 'fast') fsStart();
   if (step === 'mid') renderPrep();
@@ -791,10 +805,11 @@ function applyAssign(group, list){
   if (DEV && byId('devGroup')) byId('devGroup').value = group;
 }
 function saveAssign(){
-  if (!R.assign_persisted || !R.sid) return;
+  if (DEV || !R.assign_persisted || !R.sid) return;   /* dev 不寫入正式分派紀錄 */
   store(assignKey(R.sid), JSON.stringify({group:R.group, list:R.list, session:R.session, assigned_at:R.assigned_at}));
 }
 function markFinished(){
+  if (DEV) return;
   const a = jget(assignKey(R.sid));
   if (a){ a.finished = now(); store(assignKey(R.sid), JSON.stringify(a)); }
 }
@@ -829,12 +844,14 @@ byId('btnStart').onclick = function(){
   byId('startMsg').textContent = '';
   if (a){
     if (a.finished){ byId('startMsg').textContent = '這個編號已完成作答，不能重複作答。如有疑問請洽研究人員。'; return; }
+    ASSIGN_SRC = 'restored';
     applyAssign(a.group, a.list);
     const saved = jget(STUDY+'_'+a.session);
     if (saved && saved.R && saved.R.sid === sid){ resumeFrom(saved); return; }
     R.session = a.session; R.assigned_at = a.assigned_at;
   } else {
     if (!DEV) applyAssign(assignGroup(), pickList());   /* 按開始才抽籤 */
+    ASSIGN_SRC = 'new';
     R.assigned_at = now();
   }
   R.sid = sid;
@@ -875,6 +892,7 @@ function fsRender(){
   byId('fsStage').innerHTML =
     '<div class="queue fastq">'
     + '<div class="tbar" id="fsTbar"><i></i></div>'
+    + devLabel(p)
     + '<div class="qhead"><span>待審貼文</span><span class="right tsec" id="fsSec">'+LIMITS[p.id]+'</span></div>'
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
     + rtagsHtml(p) + pendingTag(p)
@@ -1154,6 +1172,7 @@ function rvRender(){
              aid_kind: GROUP === 'treatment' ? 'ssr_tips' : 'rules', aid_events:[] };
   byId('rvStage').innerHTML =
     '<div class="queue">'
+    + devLabel(p)
     + '<div class="qhead"><span>二次審核</span><span class="right prevround">'+(DEV ? prevRoundText(p.id) : '')+'</span></div>'
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
     + rtagsHtml(p) + pendingTag(p)
@@ -1195,7 +1214,7 @@ function rvPick(v){
     + '<div class="hint" id="rvLen"></div>'
     + (v==='warn' ? '<div class="labelprev" id="rvPrev" hidden></div>' : '')
     + '<div id="rvBasisBox" hidden>'
-    +   '<p class="lab">你做這個決定時，主要考慮了哪些？（選 1 到 3 項）</p>'
+    +   '<p class="lab">你做這個決定時，主要考慮了哪些？（至少選 1 項）</p>'
     +   '<div class="chips">'+RV.cur.basis_order.map(function(id){ const b = BASIS_BY[id];
           return '<button type="button" class="chip" data-k="'+b.id+'" aria-pressed="false">'+esc(b.label)+(DEV ? '<span class="ssrtag">'+esc(b.code)+'</span>' : '')+'</button>'; }).join('')+'</div>'
     + '</div></div>';
@@ -1211,7 +1230,6 @@ function rvPick(v){
   sub.querySelectorAll('.chip').forEach(function(c){
     c.onclick = function(){
       const k = c.dataset.k, i = RV.basis.indexOf(k);
-      if (i < 0 && RV.basis.length >= BASIS_MAX){ byId('rvHint').textContent = '最多 3 項'; return; }
       if (i >= 0) RV.basis.splice(i,1); else RV.basis.push(k);
       c.setAttribute('aria-pressed', String(i < 0));
       RV.cur.basis_toggles++;
@@ -1226,9 +1244,9 @@ function rvCheck(){
   const enough = len >= OPEN_MIN;
   const box = byId('rvBasisBox'); if (box) box.hidden = !enough;
   const lenEl = byId('rvLen'); if (lenEl) lenEl.textContent = (len > 0 && !enough) ? '再多寫一點' : '';
-  const ok = !!RV.verdict && enough && RV.basis.length >= 1 && RV.basis.length <= BASIS_MAX;
+  const ok = !!RV.verdict && enough && RV.basis.length >= 1;
   byId('rvSubmit').disabled = !ok;
-  byId('rvHint').textContent = (!RV.verdict || ok || !enough) ? '' : '至少選一項';
+  byId('rvHint').textContent = (!RV.verdict || ok || !enough) ? '' : '請至少選 1 項';
   const prev = byId('rvPrev');
   if (prev){
     const t = rvOpenText();
@@ -1240,7 +1258,7 @@ function rvSubmit(){
   const p = BY[RV.cur.id];
   const rec = Object.assign({}, RV.cur, {
     verdict:RV.verdict, open_reason: rvOpenText(), open_reason_len: countChars(rvOpenText()),
-    basis: RV.basis.slice(), basis_codes: RV.basis.map(function(k){ return BASIS_BY[k].code; }),
+    basis: RV.basis.slice(), basis_n: RV.basis.length, basis_codes: RV.basis.map(function(k){ return BASIS_BY[k].code; }),
     decision_ms: Math.round(performance.now() - RV.cur.t0),
     aid_open_count: RV.cur.aid_events.filter(function(e){ return e.action === 'open'; }).length,
     aid_opened_keys: RV.cur.aid_events.reduce(function(a,e){ if (e.action === 'open' && a.indexOf(e.key) < 0) a.push(e.key); return a; }, [])
@@ -1283,7 +1301,7 @@ function trialRows(){
       fast_conf_ms:f.conf_ms, fast_conf_adjust:f.conf_adjust,
       rv_position:r.position, rv_verdict:r.verdict,
       rv_open_reason:r.open_reason, rv_open_len:r.open_reason_len, rv_open_first_key_ms:r.open_first_key_ms, rv_open_done_ms:r.open_done_ms,
-      rv_basis:(r.basis || []).join('|'), rv_basis_codes:(r.basis_codes || []).join('|'), rv_basis_order:(r.basis_order || []).join('|'), rv_basis_toggles:r.basis_toggles,
+      rv_basis:(r.basis || []).join('|'), rv_basis_n:(r.basis || []).length, rv_basis_codes:(r.basis_codes || []).join('|'), rv_basis_order:(r.basis_order || []).join('|'), rv_basis_toggles:r.basis_toggles,
       rv_first_click_ms:r.first_click_ms, rv_decision_ms:r.decision_ms,
       rv_verdict_changes:r.verdict_changes ? r.verdict_changes.length : null,
       changed:r.changed, shift:r.shift,
@@ -1433,12 +1451,28 @@ if (params.get('setup') === '1') showSetup();
 /* ================= 研究者模式 ================= */
 if (DEV){
   byId('devbar').hidden = false;
+  function updateDevInfo(){
+    const sid = R.sid || byId('sidInput').value.trim() || '（尚未輸入）';
+    const src = ASSIGN_SRC === 'restored' ? '從 sid 讀回' : (params.get('list') || params.get('group') ? '新抽（網址指定；dev 不讀回、不寫入分派紀錄）' : '新抽（隨機；dev 不讀回、不寫入分派紀錄）');
+    byId('devInfo').innerHTML = 'sid：'+esc(sid)+'　｜　group：<i class="lst">'+GROUP+'</i>　｜　list：<i class="lst">LIST '+LIST+'</i>　｜　'+src+'　｜　待補貼文：'+PENDING_POSTS.length+' 篇';
+  }
+  window.updateDevInfo = updateDevInfo;
+  byId('sidInput').addEventListener('input', updateDevInfo);
+  function devSwitchList(l){
+    const q = new URLSearchParams(location.search);
+    q.set('dev', '1'); q.set('list', l); q.set('group', GROUP);
+    const sid = R.sid || byId('sidInput').value.trim(); if (sid) q.set('sid', sid);
+    location.href = location.pathname + '?' + q.toString();
+  }
+  byId('devListA').onclick = function(){ devSwitchList('A'); };
+  byId('devListB').onclick = function(){ devSwitchList('B'); };
+  updateDevInfo();
   (function(){
     const w = CONFIG_PROBLEMS.map(function(x){ return '⚠ 設定錯誤：'+x; }).concat(PENDING_POSTS.length ? ['⚠ 還有待補的貼文，不能正式施測：'+PENDING_POSTS.map(function(p){ return p.post_code+'（claim '+p.claim_id+' '+(p.source==='human'?'人類':'AI')+'）'; }).join('、')] : []);
     if (w.length){ const el = byId('devWarn'); el.textContent = w.join('\n'); el.hidden = false; }
   })();
   byId('devGroup').value = GROUP;
-  byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; if (cur === 'review') rvRender(); if (cur === 'mid') renderPrep(); };
+  byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; updateDevInfo(); if (cur === 'review') rvRender(); if (cur === 'mid') renderPrep(); };
   document.body.classList.add('dev-ssr');
   byId('devClear').onclick = function(){
     const sid = (R.sid || byId('sidInput').value.trim());

@@ -14,7 +14,7 @@ const T_COLS = ['session','sid','group','list','dev','time_limit_s',
   'post_id','post_code','claim_id','material_code','category','expected','source','poster_kind',
   'fast_position','fast_verdict','fast_rt_ms','fast_confidence','fast_conf_ms','fast_conf_adjust','fast_limit_s',
   'rv_position','rv_verdict','rv_open_reason','rv_open_len','rv_open_first_key_ms','rv_open_done_ms',
-  'rv_basis','rv_basis_codes','rv_basis_order','rv_basis_toggles',
+  'rv_basis','rv_basis_n','rv_basis_codes','rv_basis_order','rv_basis_toggles',
   'rv_first_click_ms','rv_decision_ms','rv_verdict_changes','changed','shift'];
 
 function doPost(e) {

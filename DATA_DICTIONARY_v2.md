@@ -49,7 +49,7 @@
 ### review[] 每則欄位
 id, position, shown_at, first_click_ms（第一次點處置）, verdict_changes[{v,ms}]（處置切換）, verdict（最終處置）,
 open_reason（開放理由）, open_reason_len（字數，不含空白標點）, open_first_key_ms（第一次輸入）, open_done_ms（達 10 字）,
-basis（勾選 id 陣列）, basis_codes（對應 code）, basis_order（該則顯示順序）, basis_toggles（勾選切換次數，換處置不歸零）,
+basis（勾選 id 陣列；勾選數量不設上限，至少 1 項）, basis_n（勾選數量）, basis_codes（對應 code）, basis_order（該則顯示順序）, basis_toggles（勾選切換次數，換處置不歸零）,
 decision_ms（從顯示到送出）, aid_kind（ssr_tips／rules）, aid_events[{key,action,ms}]（小撇步或版規開合）,
 aid_open_count, aid_opened_keys, stage1_verdict, stage1_confidence, held（最終非放行）, changed（與第一輪不同；第一輪逾時為 null）,
 shift（嚴格度變化：放行0／加註1／退回2，第二輪減第一輪）。時間欄位皆為從該則顯示起算的毫秒。
@@ -69,7 +69,8 @@ shift（嚴格度變化：放行0／加註1／退回2，第二輪減第一輪）
 | fast_position, fast_verdict, fast_rt_ms, fast_confidence, fast_conf_ms, fast_conf_adjust, fast_limit_s | 第一輪（逾時時 verdict=timeout、其餘空白） |
 | rv_position, rv_verdict | 第二輪順位、最終處置 |
 | rv_open_reason, rv_open_len, rv_open_first_key_ms, rv_open_done_ms | 開放理由與時間 |
-| rv_basis, rv_basis_codes, rv_basis_order | 勾選 id／code／顯示順序（以 `\|` 分隔） |
+| rv_basis, rv_basis_codes, rv_basis_order | 勾選 id／code／顯示順序（以 `\|` 分隔）；勾選數量不設上限，至少 1 項 |
+| rv_basis_n | 勾選數量 |
 | rv_basis_toggles | 勾選切換次數 |
 | rv_first_click_ms, rv_decision_ms, rv_verdict_changes | 第二輪首次點擊、決策時間、處置切換次數 |
 | changed, shift | 與第一輪的差異（見上） |
