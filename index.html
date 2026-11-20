@@ -104,6 +104,8 @@ textarea{width:100%;font-size:.88rem;border:1px solid var(--line);border-radius:
 .pm{flex:1;min-width:0}
 .pn{font-weight:500;font-size:.93rem;line-height:1.35}
 .ps{font-size:.72rem;color:var(--ink-3)}
+.pendingtag{margin:.2rem 1rem .4rem;padding:.3rem .6rem;border:2px dashed var(--bad);color:var(--bad);background:var(--bad-soft);border-radius:8px;font-size:.78rem;font-weight:700}
+#devWarn{background:var(--bad-soft);color:var(--bad);border-bottom:2px solid var(--bad);padding:.4rem 1rem;font-size:.78rem;line-height:1.6;white-space:pre-wrap}
 .pb{padding:.1rem 1rem .7rem;color:var(--ink);font-size:.92rem;white-space:pre-wrap;line-height:1.8}
 .pb b{display:block;font-weight:700;margin-bottom:.15rem}
 .rtags{display:flex;gap:.35rem;padding:0 1rem .4rem}
@@ -350,6 +352,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
 </head>
 <body>
 
+<div id="devWarn" hidden></div>
 <div class="devbar" id="devbar" hidden>
   <b>研究者</b>
   <label>分組 <select id="devGroup"><option value="treatment">鷹架組</option><option value="control">對照組</option></select></label>
@@ -503,7 +506,7 @@ const STUDY = 'fish12_v2_dev';
    kind：page＝粉絲專頁，person＝個人帳號 */
 /* 貼文資料在 posts.js（24 篇）；每位受試者依清單 A／B 只看 12 篇。?list=A／B 可指定 */
 const ALL_POSTS = window.POSTS_CONFIG || [];
-const LIST_A_HUMAN = [1,2,5,6,9,10];   /* LIST_A：這些 claim 用 human 版，其餘用 ai 版；LIST_B 相反 */
+const LISTS = window.LISTS_CONFIG || {};   /* 兩份清單的唯一設定來源（posts.js）；其他地方一律讀這裡，不自己算 */
 let LIST = null;
 const POSTS = [];   /* 依 LIST 在 applyList() 內填入（受試者按開始後才決定清單） */
 const FACETS = {
@@ -569,9 +572,9 @@ function pickList(){
 function applyList(l){
   LIST = l;
   POSTS.length = 0;
+  const hum = LISTS['LIST_'+l+'_human_claims'] || [], aiC = LISTS['LIST_'+l+'_ai_claims'] || [];
   ALL_POSTS.filter(function(p){
-    const humanClaim = LIST_A_HUMAN.indexOf(p.claim_id) >= 0;
-    return p.source === ((LIST === 'A') === humanClaim ? 'human' : 'ai');
+    return (p.source === 'human' && hum.indexOf(p.claim_id) >= 0) || (p.source === 'ai' && aiC.indexOf(p.claim_id) >= 0);
   }).forEach(function(p){ POSTS.push(p); });
   Object.keys(BY).forEach(function(k){ delete BY[k]; });
   Object.keys(LIMITS).forEach(function(k){ delete LIMITS[k]; });
@@ -585,6 +588,34 @@ function applyList(l){
   document.querySelectorAll('.tl-same').forEach(function(el){ el.hidden = !SAME_LIMIT; });
   document.querySelectorAll('.tl-var').forEach(function(el){ el.hidden = SAME_LIMIT; });
 }
+/* 載入檢查：清單與貼文設定要符合設計（每份清單每個 claim 一次；每類 2 human＋2 ai），否則 console 報錯、dev 畫面警告 */
+function checkConfig(){
+  const bad = [], cat = LISTS.claim_category || {}, EXP = {accurate:'pass', context:'warn', false:'back'};
+  const catOf = {}; Object.keys(cat).forEach(function(c){ cat[c].forEach(function(n){ catOf[n] = c; }); });
+  for (let n = 1; n <= 12; n++) if (!catOf[n]) bad.push('claim '+n+' 沒有指定類別');
+  ['A','B'].forEach(function(l){
+    const hum = LISTS['LIST_'+l+'_human_claims'] || [], aiC = LISTS['LIST_'+l+'_ai_claims'] || [];
+    const all = hum.concat(aiC).sort(function(a,b){ return a-b; });
+    if (all.join(',') !== '1,2,3,4,5,6,7,8,9,10,11,12') bad.push('LIST_'+l+' 的 claim 沒有「每個剛好出現一次」：'+all.join(','));
+    Object.keys(cat).forEach(function(c){
+      const h = cat[c].filter(function(n){ return hum.indexOf(n) >= 0; }).length, a = cat[c].filter(function(n){ return aiC.indexOf(n) >= 0; }).length;
+      if (h !== 2 || a !== 2) bad.push('LIST_'+l+' 的 '+c+' 類是 '+h+' 則 human、'+a+' 則 ai（應各 2）');
+    });
+  });
+  const seen = {};
+  ALL_POSTS.forEach(function(p){
+    const k = p.claim_id+'/'+p.source; seen[k] = (seen[k] || 0) + 1;
+    if (catOf[p.claim_id] !== p.category) bad.push('貼文 '+p.id+' 的類別 '+p.category+' 與 claim_category 不符');
+    if (EXP[p.category] !== p.expected) bad.push('貼文 '+p.id+' 的 expected 與類別不符');
+  });
+  for (let n = 1; n <= 12; n++) ['human','ai'].forEach(function(s){ if (seen[n+'/'+s] !== 1) bad.push('claim '+n+' 的 '+s+' 版有 '+(seen[n+'/'+s] || 0)+' 篇（應為 1）'); });
+  if (ALL_POSTS.length !== 24) bad.push('貼文共 '+ALL_POSTS.length+' 篇（應為 24）');
+  return bad;
+}
+const CONFIG_PROBLEMS = checkConfig();
+const PENDING_POSTS = ALL_POSTS.filter(function(p){ return p.pending; });
+if (CONFIG_PROBLEMS.length) console.error('【清單／貼文設定有問題】\n'+CONFIG_PROBLEMS.join('\n'));
+if (PENDING_POSTS.length) console.warn('【還有待補的貼文，不能正式施測】'+PENDING_POSTS.map(function(p){ return p.post_code+'（claim '+p.claim_id+' '+p.source+'）'; }).join('、'));
 applyList(pickList());
 
 const R = {
@@ -679,6 +710,7 @@ function avHtml(p){
 function posterSub(p){
   return p.poster.kind === 'page' ? '粉絲專頁・'+esc(p.poster.cat) : '社團成員';
 }
+function pendingTag(p){ return (DEV && p.pending) ? '<div class="pendingtag">⚠ 待補：這篇還是佔位文字（'+esc(p.post_code || p.id)+'）</div>' : ''; }
 function rtagsHtml(p){
   return '<div class="rtags">'
     + (p.category ? '<span class="tag '+(p.category==='accurate'?'ok':'bad')+'">'+({accurate:'完全沒問題',context:'需補充脈絡',false:'有錯誤訊息'})[p.category]+'</span>' : (p.correctness==='correct' ? '<span class="tag ok">正確</span>' : '<span class="tag bad">含問題</span>'))
@@ -845,7 +877,7 @@ function fsRender(){
     + '<div class="tbar" id="fsTbar"><i></i></div>'
     + '<div class="qhead"><span>待審貼文</span><span class="right tsec" id="fsSec">'+LIMITS[p.id]+'</span></div>'
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
-    + rtagsHtml(p)
+    + rtagsHtml(p) + pendingTag(p)
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
     + '<div class="decide" id="fsDecide">'
     +   '<div class="vbtns fast3">'
@@ -1064,7 +1096,7 @@ function prepShow(){
   box.innerHTML = '<div class="prepcard queue">'
     + '<div class="qhead"><span>管理團隊案例 '+PREP.stage+' / '+n+'</span></div>'
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
-    + (DEV ? rtagsHtml(p) : '')
+    + (DEV ? rtagsHtml(p) + pendingTag(p) : '')
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
     + '<div class="decide"><div class="vbtns">'
     +   '<button class="vbtn pass" data-v="pass" aria-pressed="false">放行</button>'
@@ -1124,7 +1156,7 @@ function rvRender(){
     '<div class="queue">'
     + '<div class="qhead"><span>二次審核</span><span class="right prevround">'+(DEV ? prevRoundText(p.id) : '')+'</span></div>'
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
-    + rtagsHtml(p)
+    + rtagsHtml(p) + pendingTag(p)
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
     + aidBoxHtml()
     + '<div class="decide">'
@@ -1235,7 +1267,7 @@ function payload(){
   return JSON.stringify(Object.assign({}, R, {
     basis_config: BASIS,
     prep_truth: prepTruth(),
-    truth: POSTS.map(function(p){ return {id:p.id, claim_id:p.claim_id, source:p.source, category:p.category, expected:p.expected, poster_kind:p.poster.kind}; })
+    truth: POSTS.map(function(p){ return {id:p.id, post_code:p.post_code, claim_id:p.claim_id, material_code:p.material_code, source:p.source, category:p.category, expected:p.expected, poster_kind:p.poster.kind}; })
   }), null, 2);
 }
 
@@ -1246,7 +1278,7 @@ function trialRows(){
   return POSTS.map(function(p){
     const f = fastOf(p.id) || {}, r = R.review.filter(function(x){ return x.id === p.id; })[0] || {};
     return {
-      post_id:p.id, claim_id:p.claim_id, category:p.category, expected:p.expected, list:LIST, source:p.source, poster_kind:p.poster.kind,
+      post_id:p.id, post_code:p.post_code, claim_id:p.claim_id, material_code:p.material_code, category:p.category, expected:p.expected, list:LIST, source:p.source, poster_kind:p.poster.kind,
       fast_position:f.position, fast_verdict:f.verdict, fast_rt_ms:f.rt_ms, fast_confidence:f.confidence,
       fast_conf_ms:f.conf_ms, fast_conf_adjust:f.conf_adjust,
       rv_position:r.position, rv_verdict:r.verdict,
@@ -1401,6 +1433,10 @@ if (params.get('setup') === '1') showSetup();
 /* ================= 研究者模式 ================= */
 if (DEV){
   byId('devbar').hidden = false;
+  (function(){
+    const w = CONFIG_PROBLEMS.map(function(x){ return '⚠ 設定錯誤：'+x; }).concat(PENDING_POSTS.length ? ['⚠ 還有待補的貼文，不能正式施測：'+PENDING_POSTS.map(function(p){ return p.post_code+'（claim '+p.claim_id+' '+(p.source==='human'?'人類':'AI')+'）'; }).join('、')] : []);
+    if (w.length){ const el = byId('devWarn'); el.textContent = w.join('\n'); el.hidden = false; }
+  })();
   byId('devGroup').value = GROUP;
   byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; if (cur === 'review') rvRender(); if (cur === 'mid') renderPrep(); };
   document.body.classList.add('dev-ssr');

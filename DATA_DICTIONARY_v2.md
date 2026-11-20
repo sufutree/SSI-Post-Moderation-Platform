@@ -44,7 +44,7 @@
 | community | `{released:[{id}]}` 第一輪放行紀錄（無數字） | 第一輪 |
 | basis_config | basis.js 勾選清單（id, label, code） | 常數 |
 | prep_truth | 練習正解 `{key, category, expected, best}` | 常數 |
-| truth | 該受試者 12 則的 `{id, claim_id, source, category, expected, poster_kind}` | posts.js＋list |
+| truth | 該受試者 12 則的 `{id, post_code, claim_id, material_code, source, category, expected, poster_kind}`（post_code 如 P01H、material_code 如 A4，只供研究者對照）；清單見頂層 `list` | posts.js＋list |
 
 ### review[] 每則欄位
 id, position, shown_at, first_click_ms（第一次點處置）, verdict_changes[{v,ms}]（處置切換）, verdict（最終處置）,
@@ -59,7 +59,9 @@ shift（嚴格度變化：放行0／加註1／退回2，第二輪減第一輪）
 |---|---|
 | session, sid, group, list, dev, time_limit_s | 同 participants |
 | post_id | 貼文 id（claim_id*10+1 人類／+2 AI） |
+| post_code | 內容檔編號（P01H、P01A…） |
 | claim_id | 說法編號 1–12 |
+| material_code | 素材編號（A4、F5…），只供研究者對照 |
 | category | accurate／context／false |
 | expected | 正解處置 pass／warn／back |
 | source | human／ai |

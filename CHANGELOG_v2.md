@@ -132,3 +132,11 @@
 - 事後說明頁的 AI 清單：本來就是 `POSTS.filter(source==='ai')` 動態產生，而 POSTS 依該受試者的 LIST 建立，確認非寫死。
 - 資料：新增 `reloads`、`assign_persisted`、`assigned_at`、fast[].reason；`gas/Code_v2.gs` 的 P_COLS 末端新增 `n_reloads`、`assign_persisted`（需重新部署）。
 - 已知限制：第二輪前的練習（prep）中途重新整理會從頭開始；鎖定靠瀏覽器 localStorage，換瀏覽器或裝置同一 sid 會重新抽籤；無痕模式無法鎖定。
+
+## 第 8 段：清單設定集中＋放入 1120 版貼文內容（2026-11-20）
+- 清單規則本來就已是「每類 2 human＋2 ai」（第 2 段已自行修正 prompt 的矛盾），本段把設定集中：`posts.js` 新增 `window.LISTS_CONFIG`（來自 JSON 的 `lists`），index.html 刪除 `LIST_A_HUMAN`，`applyList()` 與 `checkConfig()` 都只讀它。
+- 載入檢查 `checkConfig()`：兩份清單每個 claim 剛好一次、每類 2 human＋2 ai、24 篇每個 claim×source 剛好一篇、類別與 expected 與設定一致；不符 → `console.error`，`?dev=1` 時頁面頂端紅色警告。已用故意改壞的設定測過會觸發。
+- `posts.js` 由 `posts_content_v2_1120.json` 以程式產生（title、body、debrief、poster、ago 與 JSON 逐字相同，24/24 一致）；id 沿用數字 `claim_id*10+1/+2`，JSON 的字串 id 存為 `post_code`；新增 `material_code`、`pending`。
+- truth 與 trials 加入 `post_code`、`material_code`；`gas/Code_v2.gs` 的 T_COLS 已新增這兩欄（**需重新部署**）。material_code 不顯示在受試者畫面。
+- 待補：P12H（claim 12 人類版，F5）仍是佔位文字，`pending:true`。console 警告；`?dev=1` 頁面頂端警告，且該篇卡片（第一輪、第二輪、練習外的審核卡）顯示「⚠ 待補」。P12H 只出現在 LIST_B。
+- 第 7 段的 sid 鎖定與 list 讀回未動；同一 sid 重新整理 list 不變（已測）。
