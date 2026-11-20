@@ -391,13 +391,14 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
   <!-- 開始 -->
   <section class="step" id="s-start">
     <div class="panel">
-      <h2>歡迎，今晚的值班管理員</h2>
-      <p>今晚由你負責審核「台灣綠能生活討論區」的待審貼文。這裡沒有標準答案，照你自己的判斷就好。全程大約 15 分鐘。</p>
-      <p>請輸入施測人員給你的管理員編號，開始值班。</p>
+      <h2>「台灣綠能生活討論區」管理後台</h2>
+      <p>最近和「漁電共生」有關的投稿越來越多，管理團隊需要你幫忙把關。</p>
+      <p>今晚有 12 則貼文等你審核，大約需要 15 分鐘。每一則都照你自己的判斷處理就好。</p>
+      <p>請輸入你的管理員編號，登入後台開始值班。</p>
       <label class="field">管理員編號
         <input type="text" id="sidInput" autocomplete="off">
       </label>
-      <button class="btn primary" id="btnStart">開始值班</button>
+      <button class="btn primary" id="btnStart">登入</button>
       <p class="hint" id="startMsg" style="color:var(--bad)"></p>
     </div>
   </section>
@@ -839,7 +840,7 @@ function parseCode(raw){
 byId('btnStart').onclick = function(){
   const msg = byId('startMsg'); msg.textContent = '';
   const c = parseCode(byId('sidInput').value);
-  if (!c){ msg.textContent = '編號不正確，請向施測人員確認'; return; }
+  if (!c){ msg.textContent = '管理員編號不正確，請再確認一次'; return; }
   byId('sidInput').value = c.sid;
   const sid = c.sid;
   /* dev 才允許用網址覆蓋（資料標記 assign_source:'dev_url'） */
