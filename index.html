@@ -535,7 +535,7 @@ function countChars(t){ const m = String(t || '').match(/[\p{L}\p{N}]/gu); retur
 /* 處置標準：所有畫面（說明頁、按鈕小字）都從這裡產生。【待 Sufu 審】 */
 const CRITERIA = {
   pass:{label:"放行",           full:"內容正確，重要的面向都有交代",                         short:"沒有疑慮"},
-  warn:{label:"加註提醒後放行", full:"內容正確，但漏掉重要的取捨、受影響的人或條件，需要補充脈絡", short:"正確，但需要補充脈絡"},
+  warn:{label:"加註提醒後放行", full:"內容大致正確，但可能偏向單一觀點，建議補充取捨、受影響的對象與適用條件等脈絡，會更完整", short:"正確，但需要補充脈絡"},
   back:{label:"退回",           full:"含有和事實不符的說法，或數字、因果被扭曲（包含誤導、斷章取義）", short:"含有錯誤或誤導"}
 };
 const VNAME = {pass:CRITERIA.pass.label, warn:CRITERIA.warn.label, back:CRITERIA.back.label};
