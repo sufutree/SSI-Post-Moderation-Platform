@@ -150,3 +150,10 @@
 - 診斷（dev 看不出 LIST A／B）：不是佔位內容（第 8 段後已是正式內容）、也不是網址參數被蓋掉（dev 本來就不讀已存分派，`?list=` 有效）、清單規則也正確（A、B 抽到不同的 12 篇）。原因是 dev 模式沒有顯示任何可辨識版本的資訊（list 不顯示、既有的「正確性／撰寫來源標記」只標對錯與人/AI，不標 claim、類別、清單）。
 - dev 專屬（不加 `?dev=1` 完全不出現）：頂端資訊列（sid、group、LIST、分派來源、待補篇數）、每張審核卡右上角標籤 `claim N｜human/ai｜類別｜material_code`（human 藍、ai 紫）、「切到 LIST A／B」按鈕（以目前 group＋新 list 重新載入）。
 - dev 不再寫入分派紀錄（`saveAssign`、`markFinished` 在 dev 直接略過），避免汙染同 sid 的正式資料。
+
+## 第 10 段：管理員編號決定組別與清單（2026-11-20）
+- 開始頁：標題、內文、輸入框標籤「管理員編號」、按鈕「開始值班」照 prompt；沒有放格式範例。角色說明頁（s-brief）未改動。
+- 編號規則 `parseCode()`：去前後空白、轉大寫；第 1 碼 S＝treatment／C＝control，第 2 碼 A／B＝list，第 3 碼之後不限；不合格只顯示「編號不正確，請向施測人員確認」。完整編號（大寫）就是 sid。
+- 隨機分派已移除（`assignGroup()`、`pickList()` 刪除，不再被呼叫；程式註解註明「已改由管理員編號決定」）；`?group=`、`?list=` 只在 `?dev=1` 有效（資料 `assign_source:'dev_url'`），其餘一律由編號決定（`assign_source:'code'`）。setup 頁的分組選項已移除。
+- 第 7 段的鎖定保留：同編號重新整理讀回進度；讀回時檢查存起來的 group／list 是否與編號一致，不一致以編號為準並 `console.error`。
+- 資料：新增 `assign_source`（participants 欄位、raw_json）；`gas/Code_v2.gs` 的 P_COLS 末端新增（需重新部署）；DATA_DICTIONARY 已更新（assign_persisted 改述為「進度是否存進瀏覽器」）。

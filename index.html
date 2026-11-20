@@ -391,12 +391,13 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
   <!-- 開始 -->
   <section class="step" id="s-start">
     <div class="panel">
-      <h2>歡迎</h2>
-      <p>接下來大約需要 15 分鐘。過程中沒有標準答案，照你自己的判斷就好。</p>
-      <label class="field">受試者編號
+      <h2>歡迎，今晚的值班管理員</h2>
+      <p>今晚由你負責審核「台灣綠能生活討論區」的待審貼文。這裡沒有標準答案，照你自己的判斷就好。全程大約 15 分鐘。</p>
+      <p>請輸入施測人員給你的管理員編號，開始值班。</p>
+      <label class="field">管理員編號
         <input type="text" id="sidInput" autocomplete="off">
       </label>
-      <button class="btn primary" id="btnStart">開始</button>
+      <button class="btn primary" id="btnStart">開始值班</button>
       <p class="hint" id="startMsg" style="color:var(--bad)"></p>
     </div>
   </section>
@@ -411,10 +412,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
         <div id="suList"></div>
         <button type="button" class="btn" id="suReset">全部回到上面的秒數</button>
       </details>
-      <div class="srow"><b>分組</b>
-        <label><input type="radio" name="suGroup" value="control" checked> 對照組（不給鷹架）</label>
-        <label><input type="radio" name="suGroup" value="treatment"> 鷹架組</label></div>
-      <div class="srow"><b>受試者編號</b><input type="text" id="suSid" placeholder="可不填，讓受試者自己輸入"></div>
+      <div class="srow"><b>管理員編號</b><input type="text" id="suSid" placeholder="可不填，讓受試者自己輸入"></div>
       <div class="surl" id="suUrl"></div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
         <button class="btn primary" id="suCopy">複製網址</button>
@@ -505,7 +503,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
    FAST_SEC：第一輪每則預設秒數。施測條件都用網址參數設定，研究者可開 ?setup=1 用滑桿產生網址：
      t=15            全部貼文 15 秒（3–120）
      tp=7:6,19:20    個別貼文秒數（貼文 id:秒數），沒列到的用 t
-     group=treatment 鷹架組（不填＝隨機，鷹架組 40%） */
+     （組別與清單由管理員編號決定，不再用網址參數） */
 /* v2-redesign 分支一律送到開發用試算表（不含正式施測的網址）；正式上線前再另行指定 */
 const GAS_URL_DEV = 'https://script.google.com/macros/s/AKfycbwYJyGVa9kgx2z5wVMI6NeecsDu6l-PX1qLK_3MpmUdN_g6OD-x8bRRYJOOQHzFkdWmnA/exec';
 const GAS_URL = GAS_URL_DEV;
@@ -518,7 +516,7 @@ const STUDY = 'fish12_v2_dev';
 const ALL_POSTS = window.POSTS_CONFIG || [];
 const LISTS = window.LISTS_CONFIG || {};   /* 兩份清單的唯一設定來源（posts.js）；其他地方一律讀這裡，不自己算 */
 let LIST = null;
-let ASSIGN_SRC = 'new';   /* 這次分派：new＝新抽（或 dev 網址指定）、restored＝從 sid 讀回 */
+let ASSIGN_SRC = 'code';   /* 這次分派：code＝由管理員編號決定、restored＝讀回同編號的進度、dev_url＝dev 網址覆蓋 */
 const POSTS = [];   /* 依 LIST 在 applyList() 內填入（受試者按開始後才決定清單） */
 const FACETS = {
   complexity:{label:"複雜性", text:"這件事還牽涉哪些面向與權衡？當成單一原因會漏掉什麼？"},
@@ -558,15 +556,12 @@ function now(){ return new Date().toISOString(); }
 function store(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
 function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 
-/* 分組：?group=treatment／control 手動指定；?mode=pilot 全部對照組；否則隨機（鷹架組 40%、對照組 60%） */
+/* 組別與清單：已改由管理員編號決定（第 1 碼 S＝鷹架組／C＝控制組，第 2 碼 A／B＝清單），不再隨機抽籤。
+   開始前的暫時值只用來讓頁面能載入；按「開始值班」後以編號為準。網址的 ?group=、?list= 只在 ?dev=1 時有效。 */
 const MODE = params.get('mode');
-function assignGroup(){
-  const g = params.get('group');
-  if (g === 'treatment' || g === 'control') return g;
-  if (MODE === 'pilot') return 'control';
-  return Math.random() < 0.4 ? 'treatment' : 'control';
-}
-let GROUP = assignGroup();
+const DEV_GROUP_URL = DEV && (params.get('group') === 'treatment' || params.get('group') === 'control') ? params.get('group') : null;
+const DEV_LIST_URL = DEV && ((params.get('list') || '').toUpperCase() === 'A' || (params.get('list') || '').toUpperCase() === 'B') ? params.get('list').toUpperCase() : null;
+let GROUP = DEV_GROUP_URL || 'control';
 
 function okSec(x){ x = Number(x); return (x >= 3 && x <= 120) ? Math.round(x) : null; }
 const T_SEC = okSec(params.get('t')) || FAST_SEC;
@@ -574,11 +569,6 @@ const T_SEC = okSec(params.get('t')) || FAST_SEC;
 const LIMITS = {};
 let SAME_LIMIT = true;
 function limitMs(id){ return LIMITS[id]*1000; }
-/* 清單：?list=A／B 指定，否則 50:50 隨機 */
-function pickList(){
-  const l = (params.get('list') || '').toUpperCase();
-  return (l === 'A' || l === 'B') ? l : (Math.random() < 0.5 ? 'A' : 'B');
-}
 /* 套用清單：就地重建 POSTS、BY、LIMITS（其他程式都持有同一個物件） */
 function applyList(l){
   LIST = l;
@@ -627,11 +617,11 @@ const CONFIG_PROBLEMS = checkConfig();
 const PENDING_POSTS = ALL_POSTS.filter(function(p){ return p.pending; });
 if (CONFIG_PROBLEMS.length) console.error('【清單／貼文設定有問題】\n'+CONFIG_PROBLEMS.join('\n'));
 if (PENDING_POSTS.length) console.warn('【還有待補的貼文，不能正式施測】'+PENDING_POSTS.map(function(p){ return p.post_code+'（claim '+p.claim_id+' '+p.source+'）'; }).join('、'));
-applyList(pickList());
+applyList(DEV_LIST_URL || 'A');   /* 暫時值；按開始後由管理員編號決定 */
 
 const R = {
   study:STUDY, session:Date.now().toString(36)+Math.random().toString(36).slice(2,8),
-  sid:null, group:GROUP, list:LIST, started:null, finished:null, assign_persisted:null, assigned_at:null, reloads:[],
+  sid:null, group:GROUP, list:LIST, started:null, finished:null, assign_persisted:null, assign_source:null, assigned_at:null, reloads:[],
   device:{w:window.innerWidth, h:window.innerHeight, ua:navigator.userAgent},
   stage_times:{}, fast_time_limit_ms:T_SEC*1000, fast_time_limits:LIMITS,
   fast_order:null, fast:[], review_order:null, review:[]
@@ -814,10 +804,12 @@ function markFinished(){
   if (a){ a.finished = now(); store(assignKey(R.sid), JSON.stringify(a)); }
 }
 /* 從 localStorage 的進度接續：第一輪正在計時的那一則記為 timeout（reason:'reload'），第二輪寫到一半的從該則重做 */
-function resumeFrom(saved){
+function resumeFrom(saved, c){
   const step = saved.step || 'brief';
   Object.keys(R).forEach(function(k){ delete R[k]; });
   Object.assign(R, saved.R);
+  if (R.group !== c.group || R.list !== c.list) console.error('存起來的進度與管理員編號不一致，以編號為準：', R.group, R.list, '→', c.group, c.list);
+  R.group = c.group; R.list = c.list; R.sid = c.sid;
   GROUP = R.group; applyList(R.list);
   R.fast_time_limits = LIMITS;
   R.assign_persisted = true;
@@ -836,30 +828,46 @@ function resumeFrom(saved){
   byId('sidInput').value = R.sid;
   go(step === 'start' ? 'brief' : step, true);
 }
+/* 管理員編號：第 1 碼 S＝鷹架組／C＝控制組，第 2 碼 A／B＝清單，第 3 碼之後不限；轉大寫、去前後空白。不合格回傳 null */
+function parseCode(raw){
+  const sid = String(raw || '').trim().toUpperCase();
+  if (sid.length < 2) return null;
+  const g = {S:'treatment', C:'control'}[sid.charAt(0)], l = sid.charAt(1);
+  if (!g || (l !== 'A' && l !== 'B')) return null;
+  return {sid:sid, group:g, list:l};
+}
 byId('btnStart').onclick = function(){
-  const v = byId('sidInput').value.trim();
-  const sid = v || ('anon-'+Date.now().toString(36));
+  const msg = byId('startMsg'); msg.textContent = '';
+  const c = parseCode(byId('sidInput').value);
+  if (!c){ msg.textContent = '編號不正確，請向施測人員確認'; return; }
+  byId('sidInput').value = c.sid;
+  const sid = c.sid;
+  /* dev 才允許用網址覆蓋（資料標記 assign_source:'dev_url'） */
+  const grp = DEV_GROUP_URL || c.group, lst = DEV_LIST_URL || c.list;
+  const overridden = grp !== c.group || lst !== c.list;
   const persist = storageOk();
-  const a = (persist && !DEV && v) ? jget(assignKey(sid)) : null;
-  byId('startMsg').textContent = '';
+  const a = (persist && !DEV) ? jget(assignKey(sid)) : null;
   if (a){
-    if (a.finished){ byId('startMsg').textContent = '這個編號已完成作答，不能重複作答。如有疑問請洽研究人員。'; return; }
+    if (a.finished){ msg.textContent = '這個編號已完成作答，不能重複作答。如有疑問請洽研究人員。'; return; }
+    if (a.group !== c.group || a.list !== c.list) console.error('存起來的分派與管理員編號不一致，以編號為準：', a.group, a.list, '→', c.group, c.list);
     ASSIGN_SRC = 'restored';
-    applyAssign(a.group, a.list);
+    applyAssign(c.group, c.list);
     const saved = jget(STUDY+'_'+a.session);
-    if (saved && saved.R && saved.R.sid === sid){ resumeFrom(saved); return; }
+    if (saved && saved.R && saved.R.sid === sid){ R.assign_source = 'code'; resumeFrom(saved, c); return; }
     R.session = a.session; R.assigned_at = a.assigned_at;
   } else {
-    if (!DEV) applyAssign(assignGroup(), pickList());   /* 按開始才抽籤 */
-    ASSIGN_SRC = 'new';
+    applyAssign(grp, lst);
+    ASSIGN_SRC = overridden ? 'dev_url' : 'code';
     R.assigned_at = now();
   }
+  R.assign_source = overridden ? 'dev_url' : 'code';
   R.sid = sid;
   R.assign_persisted = persist;
   R.started = now();
   saveAssign();
   go('brief');
 };
+
 byId('btnBrief').onclick = function(){ go('fast'); };
 byId('btnMid').onclick = function(){
   if (R.prep && R.prep.outro_ms === null) R.prep.outro_ms = Math.round(performance.now() - PREP.stageAt);
@@ -1313,7 +1321,7 @@ function upload(stage){
   if (!/^https:\/\/script\.google\.com\//.test(GAS_URL)){ upDone(false, '尚未設定 GAS_URL'); return Promise.resolve(false); }
   const done = R.fast.filter(function(x){ return x.verdict !== 'timeout'; });
   const body = JSON.stringify({
-    stage:stage, study:STUDY, session:R.session, sid:R.sid, group:R.group, list:R.list, mode:MODE || '', dev:DEV,
+    stage:stage, study:STUDY, session:R.session, sid:R.sid, group:R.group, list:R.list, mode:MODE || '', assign_source:R.assign_source, dev:DEV,
     started:R.started, finished:R.finished, time_limit_s:T_SEC,
     n_reloads:(R.reloads || []).length, assign_persisted:R.assign_persisted,
     n_fast:R.fast.length, n_timeout:R.fast.length - done.length,
@@ -1405,7 +1413,6 @@ function showSetup(){
   all.value = T_SEC;
   POSTS.forEach(function(p){ each[p.id] = LIMITS[p.id]; });
   byId('suEach').open = !SAME_LIMIT;
-  document.querySelector('input[name="suGroup"][value="'+GROUP+'"]').checked = true;
   list.innerHTML = POSTS.map(function(p){
     return '<div class="sitem" id="si'+p.id+'"><span class="st" title="'+esc(p.title)+'"><small>#'+p.id+' '+({accurate:'沒問題',context:'需脈絡',false:'有錯誤'})[p.category]+'</small>'+esc(p.title)+'</span>'
       + '<input type="range" min="3" max="60" step="1" data-id="'+p.id+'"><span class="sval"></span></div>';
@@ -1415,7 +1422,6 @@ function showSetup(){
     if (t !== FAST_SEC) q.set('t', t);
     const tp = POSTS.filter(function(p){ return each[p.id] !== t; }).map(function(p){ return p.id+':'+each[p.id]; });
     if (tp.length) q.set('tp', tp.join(','));
-    if (document.querySelector('input[name="suGroup"]:checked').value === 'treatment') q.set('group', 'treatment');
     const sid = byId('suSid').value.trim(); if (sid) q.set('sid', sid);
     const qs = q.toString().replace(/%3A/g, ':').replace(/%2C/g, ',');
     return location.origin + location.pathname + (qs ? '?'+qs : '');
@@ -1437,7 +1443,6 @@ function showSetup(){
   all.dataset.prev = T_SEC;
   list.oninput = function(e){ if (e.target.dataset.id){ each[e.target.dataset.id] = Number(e.target.value); paint(); } };
   byId('suReset').onclick = function(){ POSTS.forEach(function(p){ each[p.id] = Number(all.value); }); paint(); };
-  document.querySelectorAll('input[name="suGroup"]').forEach(function(r){ r.onchange = paint; });
   byId('suSid').oninput = paint;
   byId('suCopy').onclick = function(){
     const msg = byId('suMsg');
@@ -1453,7 +1458,7 @@ if (DEV){
   byId('devbar').hidden = false;
   function updateDevInfo(){
     const sid = R.sid || byId('sidInput').value.trim() || '（尚未輸入）';
-    const src = ASSIGN_SRC === 'restored' ? '從 sid 讀回' : (params.get('list') || params.get('group') ? '新抽（網址指定；dev 不讀回、不寫入分派紀錄）' : '新抽（隨機；dev 不讀回、不寫入分派紀錄）');
+    const src = ASSIGN_SRC === 'restored' ? '由編號決定（讀回進度）' : (ASSIGN_SRC === 'dev_url' || DEV_GROUP_URL || DEV_LIST_URL ? 'dev 網址覆蓋（不寫入分派紀錄）' : '由管理員編號決定（dev 不寫入分派紀錄）');
     byId('devInfo').innerHTML = 'sid：'+esc(sid)+'　｜　group：<i class="lst">'+GROUP+'</i>　｜　list：<i class="lst">LIST '+LIST+'</i>　｜　'+src+'　｜　待補貼文：'+PENDING_POSTS.length+' 篇';
   }
   window.updateDevInfo = updateDevInfo;
@@ -1475,8 +1480,8 @@ if (DEV){
   byId('devGroup').onchange = function(e){ GROUP = e.target.value; R.group = GROUP; updateDevInfo(); if (cur === 'review') rvRender(); if (cur === 'mid') renderPrep(); };
   document.body.classList.add('dev-ssr');
   byId('devClear').onclick = function(){
-    const sid = (R.sid || byId('sidInput').value.trim());
-    if (!sid){ alert('請先輸入受試者編號'); return; }
+    const sid = (R.sid || byId('sidInput').value.trim().toUpperCase());
+    if (!sid){ alert('請先輸入管理員編號'); return; }
     const a = jget(assignKey(sid));
     try{ localStorage.removeItem(assignKey(sid)); if (a && a.session) localStorage.removeItem(STUDY+'_'+a.session); }catch(e){}
     alert('已清除編號「'+sid+'」的分派與進度'+(a ? '' : '（原本沒有紀錄）'));

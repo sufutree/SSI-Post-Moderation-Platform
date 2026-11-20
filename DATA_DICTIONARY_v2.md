@@ -10,9 +10,10 @@
 | stage | 文字 | fast_done／complete | go('mid')、go('end') |
 | study | 文字 | 研究代號 fish12_v2_dev | 常數 STUDY |
 | session | 文字 | 本次作答唯一碼（覆寫依據） | 載入頁面 |
-| sid | 文字 | 受試者編號 | 開始頁輸入 |
-| group | 文字 | treatment（鷹架）／control | 載入頁面（60:40 隨機，或 ?group=） |
-| list | 文字 | A／B（貼文清單） | 載入頁面（50:50 隨機，或 ?list=） |
+| sid | 文字 | 管理員編號（完整編號，轉大寫） | 開始頁輸入 |
+| group | 文字 | treatment（鷹架）／control | 管理員編號第 1 碼（S／C）；已不再隨機分派 |
+| list | 文字 | A／B（貼文清單） | 管理員編號第 2 碼（A／B）；已不再隨機分派 |
+| assign_source | 文字 | 分派來源：code＝由管理員編號決定；dev_url＝研究者模式用網址覆蓋（只會出現在 dev=1 的測試資料） | 按「開始值班」 |
 | mode | 文字 | 網址 ?mode=（pilot 或空白） | 網址參數 |
 | dev | 布林 | 是否研究者模式 | ?dev=1 |
 | started／finished | ISO 時間 | 開始、完成時間 | 開始頁／結束頁 |
@@ -26,14 +27,15 @@
 | time_limits | 文字 | 每則秒數 `id:秒,…` | 第一輪設定 |
 | raw_json | JSON 文字 | 整包資料（上限 49000 字），結構見下表 | 全流程 |
 | n_reloads | 整數 | 中途重新整理的次數（`raw_json.reloads` 的長度） | 接續時 |
-| assign_persisted | 布林 | 分派是否成功存在瀏覽器（false＝儲存功能被擋，無法鎖定／接續） | 按「開始」 |
+| assign_persisted | 布林 | 進度是否成功存在瀏覽器（false＝儲存功能被擋，無法重新整理後接續；組別與清單不受影響，因為由編號決定） | 按「開始值班」 |
 
 ## raw_json 結構
 | 鍵 | 內容 | 來源 |
 |---|---|---|
 | study, session, sid, group, list, started, finished, device{w,h,ua} | 同上 | 載入／開始 |
-| assigned_at | 分派時間（ISO） | 按「開始」 |
-| assign_persisted | 分派是否存進瀏覽器 | 按「開始」 |
+| assigned_at | 分派時間（ISO） | 按「開始值班」 |
+| assign_source | 同上 | 按「開始值班」 |
+| assign_persisted | 進度是否存進瀏覽器 | 按「開始值班」 |
 | reloads[] | 重新整理事件 `{at, step}`（step＝重新整理當時所在步驟） | 接續時 |
 | stage_times | 各步驟（brief, fast, mid, review, debrief, end）開始時間 | go() |
 | fast_time_limit_ms, fast_time_limits | 第一輪限時（毫秒、每則） | 第一輪 |
