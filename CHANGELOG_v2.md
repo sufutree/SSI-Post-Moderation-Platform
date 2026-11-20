@@ -140,3 +140,7 @@
 - truth 與 trials 加入 `post_code`、`material_code`；`gas/Code_v2.gs` 的 T_COLS 已新增這兩欄（**需重新部署**）。material_code 不顯示在受試者畫面。
 - 待補：P12H（claim 12 人類版，F5）仍是佔位文字，`pending:true`。console 警告；`?dev=1` 頁面頂端警告，且該篇卡片（第一輪、第二輪、練習外的審核卡）顯示「⚠ 待補」。P12H 只出現在 LIST_B。
 - 第 7 段的 sid 鎖定與 list 讀回未動；同一 sid 重新整理 list 不變（已測）。
+
+### 第 8 段補：F5 已補上（2026-11-20）
+- 內容檔更新後重新產生 posts.js：P12H（人類版）補上原文、`pending:false`；P12A 的 title、body、debrief 也有更新。其餘 22 篇不變。
+- 重跑比對：24/24 與 JSON 逐字一致；A、B 清單檢查全部通過；已無待補貼文，console 與 dev 畫面的「待補」警告消失。
