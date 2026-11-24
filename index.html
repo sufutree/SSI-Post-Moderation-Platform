@@ -620,9 +620,10 @@ if (CONFIG_PROBLEMS.length) console.error('【清單／貼文設定有問題】\
 if (PENDING_POSTS.length) console.warn('【還有待補的貼文，不能正式施測】'+PENDING_POSTS.map(function(p){ return p.post_code+'（claim '+p.claim_id+' '+p.source+'）'; }).join('、'));
 applyList(DEV_LIST_URL || 'A');   /* 暫時值；按開始後由管理員編號決定 */
 
+const SCAFFOLD_VERSION = 'scaffold_v2_1124';  /* 鷹架與對照組練習／輔助欄內容版本 */
 const R = {
   study:STUDY, session:Date.now().toString(36)+Math.random().toString(36).slice(2,8),
-  sid:null, group:GROUP, list:LIST, started:null, finished:null, assign_persisted:null, assign_source:null, assigned_at:null, reloads:[],
+  sid:null, scaffold_version:SCAFFOLD_VERSION, group:GROUP, list:LIST, started:null, finished:null, assign_persisted:null, assign_source:null, assigned_at:null, reloads:[],
   device:{w:window.innerWidth, h:window.innerHeight, ua:navigator.userAgent},
   stage_times:{}, fast_time_limit_ms:T_SEC*1000, fast_time_limits:LIMITS,
   fast_order:null, fast:[], review_order:null, review:[]
@@ -716,10 +717,10 @@ function devLabel(p){
   return DEV ? '<div class="devlabelrow"><span class="devlabel '+p.source+'">claim '+p.claim_id+'｜'+p.source+'｜'+p.category+'｜'+esc(p.material_code || '')+'</span></div>' : '';
 }
 function pendingTag(p){ return (DEV && p.pending) ? '<div class="pendingtag">⚠ 待補：這篇還是佔位文字（'+esc(p.post_code || p.id)+'）</div>' : ''; }
-function rtagsHtml(p){
+function rtagsHtml(p, noSrc){
   return '<div class="rtags">'
     + (p.category ? '<span class="tag '+(p.category==='accurate'?'ok':'bad')+'">'+({accurate:'完全沒問題',context:'需補充脈絡',false:'有錯誤訊息'})[p.category]+'</span>' : (p.correctness==='correct' ? '<span class="tag ok">正確</span>' : '<span class="tag bad">含問題</span>'))
-    + (p.source==='human' ? '<span class="tag hum">人類撰寫</span>' : '<span class="tag rai">AI 撰寫</span>')
+    + (noSrc ? '' : (p.source==='human' ? '<span class="tag hum">人類撰寫</span>' : '<span class="tag rai">AI 撰寫</span>'))
     + '</div>';
 }
 /* ================= 放大 ================= */
@@ -982,65 +983,157 @@ function fsNext(){ FS.i++; fsRender(); }
 function fastOf(id){ return R.fast.filter(function(x){ return x.id === id; })[0] || null; }
 
 /* ================= 第二輪前練習 + 輔助欄 =================
-   鷹架組：預防接種（INOC，3 則）＋小撇步（TIPS）；對照組：版規練習（RULEP）＋社團版規（RULES）。
-   兩組結構、位置、互動完全對等，只有內容不同。練習貼文不進 POSTS／BY／truth。 */
+   內容版本 SCAFFOLD_VERSION（文字一律照《鷹架內容草稿_v2_1124》，請勿改字）。
+   鷹架組：3 則練習（INOC）＋四個問句（TIPS，標題「判讀前想一想」）；
+   對照組：3 則練習（RULEP）＋四條社團版規（RULES，標題「社團版規」）。
+   兩組結構、位置、互動完全對等，只有內容不同。練習貼文不進 POSTS／BY／truth。
+   練習解析 lines 裡的粗體問句（q）必須和第二輪的 TIPS／RULES 的 q 一字不差，載入時檢查（checkPrepText）。 */
 const TIPS = [
-  {key:"cx", q:"還牽涉哪些取捨？", d:"這件事是不是只講了一個原因？背後有沒有成本、時間或條件上的差別？"},
-  {key:"pt", q:"誰會受影響？", d:"有哪些人會被這件事影響？他們的處境，貼文有寫到嗎？"},
-  {key:"in", q:"還缺什麼資訊？", d:"數字從哪裡來？要相信這個說法，你還需要知道什麼？"},
-  {key:"sk", q:"誰發的？為什麼？", d:"發文者想讓你相信什麼？你說得出理由嗎，還是只看身分？"}
+  {key:"cx", q:"會不會把事情講得太單純？", d:"這件事牽涉的原因和取捨，貼文說清楚了嗎？有沒有把複雜的事，講成單一原因或直接的因果？"},
+  {key:"pt", q:"不同處境的人，有被考慮到嗎？", d:"養殖戶、消費者、光電業者或政府，不同處境的人看到這則會怎麼想？他們的處境，貼文有寫到嗎？"},
+  {key:"in", q:"現在知道的訊息，夠下定論嗎？", d:"貼文中說得確定的地方，真的已經確定了嗎？哪些部分還需要觀察或研究？還需要知道什麼？"},
+  {key:"sk", q:"這則貼文會不會被某個立場影響？", d:"發文者或資料提供者有沒有自己的利益？會不會影響他挑哪些內容、怎麼說？只看是誰發的，夠了嗎？"}
 ];
 const RULES = [
-  {key:"r1", q:"友善交流", d:"留言和貼文請保持禮貌，不人身攻擊。"},
-  {key:"r2", q:"商業內容需標註", d:"團購或廣告請加註「非社團合作」。"},
-  {key:"r3", q:"勿重複張貼", d:"同一內容一週內請勿重複發文。"},
-  {key:"r4", q:"活動附時間地點", d:"活動內容請寫清楚時間與地點。"}
+  {key:"r1", q:"友善交流", d:"貼文和留言有保持禮貌嗎？有沒有攻擊或嘲笑特定的人？"},
+  {key:"r2", q:"商業內容需標註", d:"這是團購、廣告或販售嗎？有沒有加註「非社團合作」？"},
+  {key:"r3", q:"勿重複張貼", d:"同樣的內容，一週內是不是已經發過了？"},
+  {key:"r4", q:"活動附時間地點", d:"如果是活動，時間、地點和報名方式寫清楚了嗎？"}
 ];
-const TIER_TXT = {best:"✓ 判得好", ok:"△ 接近了", wrong:"✗ 再想想"};
+const TIER_TXT = {best:"✓ 判得好", ok:"△ 可以，但還能更好", wrong:"✗ 再想想"};
 const VREC = VNAME;
+/* 開場卡／結語卡（兩組各一組；〔開始練習〕〔開始二次審核〕為按鈕） */
+const PREP_CARDS = {
+  treatment: {
+    introTitle: "審核前，先想一件事",
+    introHtml:
+      '<p>「台灣綠能生活討論區」有一萬兩千多位成員。你放行的每一則貼文，都可能被很多人看到、轉傳，甚至影響他們買不買漁產、支不支持某項政策。</p>'
+      + '<p>審錯有兩種後果：<br>'
+      + '・<b>該擋的放出去</b>：不正確或只講一面的說法，會讓成員誤會，受影響的可能是養殖戶、消費者或附近居民。<br>'
+      + '・<b>不該擋的擋下來</b>：內容沒問題的貼文被退回，成員就少了該知道的資訊，發文者也被冤枉。</p>'
+      + '<p>所以審得好，不是看寫法或誰發的就決定。接下來 3 則練習，示範怎麼用四個問題，把一則貼文想清楚。</p>',
+    introBtn: "開始練習",
+    outroTitle: "練習完成",
+    outroHtml: '<p>接下來的二次審核，每則貼文下方都會有剛剛那四個問題。不用回答；想看說明可以點開。</p>'
+  },
+  control: {
+    introTitle: "審核前，先想一件事",
+    introHtml:
+      '<p>「台灣綠能生活討論區」有一萬兩千多位成員。版規沒有守好，社團就會變亂。</p>'
+      + '<p>審錯有兩種後果：<br>'
+      + '・<b>該擋的放出去</b>：重複的貼文洗版，大家找不到想看的內容；沒標註的團購，會被誤以為是社團合作。<br>'
+      + '・<b>不該擋的擋下來</b>：正常的交流被擋，成員就不想再發文了。</p>'
+      + '<p>接下來 3 則練習，示範怎麼用四條版規處理一則貼文。</p>',
+    introBtn: "開始練習",
+    outroTitle: "練習完成",
+    outroHtml: '<p>接下來的二次審核，每則貼文下方都會有剛剛那四條社團版規。不用回答；想看說明可以點開。</p>'
+  }
+};
+/* 三層回饋：依貼文類別直接列出（不是用「差幾級」推算）：錯誤訊息→退回；需補充脈絡→加註；完全沒問題→放行 */
+const TIER_BY_CATEGORY = {
+  false:    {pass:'wrong', warn:'ok',   back:'best'},
+  context:  {pass:'wrong', warn:'best', back:'wrong'},
+  accurate: {pass:'best',  warn:'ok',   back:'wrong'}
+};
+/* lines：[{q 粗體問句／版規名, t 接在後面的文字（含分隔）}]；lead 開頭段、closing 結尾段、wrong「如果處理錯」 */
 const INOC = [
  {key:"inocA", post:{id:901, key:"inocA", category:"false", source:"human",
    poster:{name:"電力時事通", kind:"page", cat:"新聞與媒體網站", color:"#4A6A8A"}, ago:"1 天",
    title:"台電提醒民眾「在春節假期出遠門時要記得拔插頭」，理由竟然不是省電，而是綠電太多會造成民眾的損失和風險",
    body:"因為今年春節假期長達十天，工廠、商業用電減少，預估用電負載僅1,750萬瓩，用電下降會導致電壓上升。另一方面，秋冬是離岸風電發電全盛期，再生能源滲透率，大年初二有望突破30%。若臨時風力、日照變強，火力機組來不及降載，影響電網穩定性，也會造成電壓飆升，甚至可能升至130伏特。若連續數小時都高過耐壓值範圍，老舊的電器絕緣不佳，可能導致電器損壞，或者更嚴重的是引起電線走火的公共安全問題。",
    },
-  lead:"這則的數字大多有出處：台電確實說過春節用電負載約 1,750 萬瓩、電壓可能升到 130 伏特左右，也確實請民眾出遠門時拔插頭。問題出在標題的因果：台電說的主因是<b>假期用電大減</b>，電壓才跟著升高，台電也會降壓運轉；貼文卻把原因說成「綠電太多會造成民眾損失」。文筆專業、數字也是真的，不代表結論是對的。",
-  lines:["電壓升高跟用電量大降有關，貼文卻把它講成只有綠電一個原因。","讀者會以為是綠電害自家電器壞掉，對再生能源產生不必要的恐慌。","台電原本怎麼說？調度中心會不會把電壓控制在安全範圍內？","標題用「理由竟然是…」製造反轉，想讓人相信某個結論，而不是單純轉述提醒。"],
+  lead:"這則的數字大多有出處：台電確實預估春節用電負載約 1,750 萬瓩，也確實提醒民眾出遠門時拔插頭。問題出在標題的因果。",
+  lines:[
+    {q:"會不會把事情講得太單純？", t:" 會。台電說電壓升高主要是因為假期用電大減，貼文卻把原因講成「綠電太多」，把複雜的電網調度講成單一原因。"},
+    {q:"不同處境的人，有被考慮到嗎？", t:" 讀者會以為綠電害自家電器壞掉；負責調度的台電怎麼說、會不會降壓運轉，貼文沒有寫。"},
+    {q:"現在知道的訊息，夠下定論嗎？", t:" 不夠。電壓會不會真的高到傷害電器，要看調度怎麼控制，貼文把「可能」講成了確定的損失。"},
+    {q:"這則貼文會不會被某個立場影響？", t:" 標題用「理由竟然不是省電」製造反轉，強調綠電的風險，略過了台電原本的說明。粉專名稱看起來很專業，但只看是誰發的，夠了嗎？"}
+  ],
+  closing:"",
+  wrong:"放行的話，成員會以為綠電會害自家電器壞掉，對再生能源產生不必要的恐慌。",
   src:"資料來源：Cofacts 查核回應（https://cofacts.tw/article/2fcwa9qymgw70 ）；TechNews 2023-01-15 引述台電說明（https://technews.tw/2023/01/15/electric-power-vacation/ ）。"},
  {key:"inocC", post:{id:903, key:"inocC", category:"context", source:"human",
    poster:{name:"節能生活辦公室", kind:"page", cat:"政府機關", color:"#2F6E9E"}, ago:"6 小時",
    title:"今天是夏月電價的第一天",
    body:"夏月電價1989年推行，每年6至9月實施，主要是反映夏季尖峰用電成本。美、日、英等國都有季節電價設計，藉此引導民眾節電、降低夏季尖峰負載，#全年平均電價並未改變，大家不要相信夏天又漲電價的謠言喔。\n為了夏天能省電、省錢，別讓老舊家電變成吃電怪獸。汰換高效率的冷氣及冰箱，跟夏月使用老舊電器比較，還能幫您省下50%用電量，不只是節能減碳，還幫您省荷包。",
    },
-  lead:"內容沒有錯，但它是主管機關的宣導，只從政府的角度說明。「全年平均電價沒變」是真的，可是夏月期間每度電比較貴，用電多的家庭帳單還是會變高，這一點貼文沒有提。內容正確就不該退回；只講一面，就值得加註提醒。",
-  lines:["平均電價沒變，和「夏天帳單會不會變高」是兩件事。","用電多、家電老舊、沒錢換新家電的家庭，感受會和宣導不一樣。","夏月和非夏月每度差多少？「省下 50%」是跟什麼比？","發文的是推動政策的機關，想說服大家這不是漲價；說得出這個理由才算懷疑，不是看到「政府」兩個字就不信。"],
+  lead:"內容沒有錯，但它只從推動政策的角度說明。",
+  lines:[
+    {q:"會不會把事情講得太單純？", t:" 有一點。「全年平均電價沒變」是真的，但夏月期間每度電比較貴，用電多的家庭帳單還是會變高，貼文沒有提。"},
+    {q:"不同處境的人，有被考慮到嗎？", t:" 用電多、家電老舊、沒錢換新家電的家庭，感受會和宣導不一樣。"},
+    {q:"現在知道的訊息，夠下定論嗎？", t:" 夏月和非夏月每度差多少？「省下 50% 用電量」是跟什麼比？貼文沒有交代。"},
+    {q:"這則貼文會不會被某個立場影響？", t:" 發文的是推動政策的機關，想說服大家這不是漲價，所以強調好處。這不代表內容是錯的；只看是誰發的，夠了嗎？"}
+  ],
+  closing:"內容正確就不該退回；只講一面，就值得加註提醒。",
+  wrong:"直接放行，用電多的家庭可能以為帳單不會變；退回的話，正確的政策說明就被擋掉了。",
   src:""},
- {key:"inocB", post:{id:902, key:"inocB", category:"accurate", source:"ai",
+ {key:"inocB", post:{id:902, key:"inocB", category:"accurate", source:"human",
    poster:{name:"地方生活誌", kind:"page", cat:"社群", color:"#7A5C3E"}, ago:"3 小時",
    title:"台灣的用電尖峰，已經從白天搬到晚上",
    body:"過去談供電壓力，大家想到的都是正午最熱的時候。隨著光電裝置容量增加，白天日照充足時光電能補上一大塊需求，真正吃緊的反而是太陽下山後那幾個小時。因應方式不只一種：日落前先排程讓燃氣、水力機組上線，搭配儲能和虛擬電廠，再透過時間電價、需量反應請用電大戶把用電挪開，一起分散夜間的負載。",
    },
-  lead:"這則的文字<b>是 AI 生成的</b>，但內容是對的：光電增加後，供電最吃緊的時段確實移到傍晚以後，貼文列出的因應方式也都是實際在用的做法。「看起來像 AI」不是退回的理由，要看內容本身。",
-  lines:["貼文講到不只一種因應方式，沒有把問題講成單一解法。","用電大戶要配合挪開用電時段，貼文也有提到。","想再確認的話，可以查台電的夜尖峰負載資料；但目前寫的內容沒有錯。","地方生活類粉專，一般說明語氣，看不出特定利益。"],
-  src:"判讀的重點是<b>內容對不對</b>，不是<b>誰做的、用什麼做的</b>。", srcRaw:true}
+  lead:"用四個問題檢查這則，都沒有發現明顯的問題。",
+  lines:[
+    {q:"會不會把事情講得太單純？", t:" 沒有。貼文說明了供電吃緊時段改變的原因，也列出好幾種因應方式，沒有把問題講成單一解法。"},
+    {q:"不同處境的人，有被考慮到嗎？", t:" 有。電廠調度和用電大戶要配合挪開用電時段，貼文都有提到。"},
+    {q:"現在知道的訊息，夠下定論嗎？", t:" 貼文說的是目前已經在用的做法；想再確認，可以查台電的夜尖峰負載資料，但目前寫的內容沒有錯。"},
+    {q:"這則貼文會不會被某個立場影響？", t:" 地方生活類粉專，一般說明的語氣，看不出有特定利益在影響內容。"}
+  ],
+  closing:"四個問題都檢查過、答案是沒問題，就該放行。用這些問題想，不是為了挑毛病，而是為了看清楚。",
+  wrong:"退回的話，社團少了一則把來龍去脈交代清楚的貼文，發文者也被冤枉。",
+  src:""}
 ];
 const RULEP = [
- {key:"ruleA", post:{id:911, key:"ruleA", category:"accurate", source:"human",
-   poster:{name:"林佳穎", kind:"person"}, ago:"20 分鐘",
-   title:"週六淨灘活動", body:"這週六早上 9 點在旗津海岸有淨灘活動，自備手套和水壺，結束後一起吃早餐，想參加的留言＋1！"},
-  lead:"社團活動、交流內容歡迎張貼，符合社團用途，直接放行即可。這則的語氣友善，時間和地點也都寫得清楚，四條版規逐一對照都沒有問題。",
-  lines:["語氣友善、沒有攻擊他人。","不是商業內容，不需要標註。","第一次張貼，沒有重複。","有寫時間和地點，內容完整。"], src:""},
- {key:"ruleB", post:{id:912, key:"ruleB", category:"context", source:"human",
-   poster:{name:"好物團購站", kind:"page", cat:"購物", color:"#8A5A2E"}, ago:"35 分鐘",
-   title:"電風扇團購開跑", body:"電風扇團購開跑！原價 2,490，團購價 1,690，下單連結在留言區，數量有限。"},
-  lead:"商業團購可以張貼，但要加註「非社團合作」。這則是團購，版規要求的標註還沒有寫，所以放行時補上提醒最合適；整則退回就太重了。",
-  lines:["語氣沒有問題，也沒有攻擊他人。","這是團購，應該加註說明不是社團合作的活動。","第一次張貼，沒有重複。","不是活動，這一條不適用。"], src:""},
  {key:"ruleC", post:{id:913, key:"ruleC", category:"false", source:"human",
    poster:{name:"王俊傑", kind:"person"}, ago:"50 分鐘",
    title:"二手機車便宜賣", body:"再發一次～二手機車便宜賣，私訊詳談。"},
-  lead:"同一內容重複張貼屬於洗版，應退回。這位社員已經是第三次張貼同一則二手機車出售文，不管內容本身如何，都不符合版規。",
-  lines:["語氣沒有問題，也沒有攻擊他人。","個人二手買賣，不算商業團購，不需要標註。","這是第三次張貼同樣的內容，已經重複。","不是活動，這一條不適用。"], src:""}
+  lead:"",
+  lines:[
+    {q:"友善交流", t:"：語氣沒問題。"},
+    {q:"商業內容需標註", t:"：個人二手買賣，不算商業團購。"},
+    {q:"勿重複張貼", t:"：這是第三次張貼同樣的內容，屬於洗版。"},
+    {q:"活動附時間地點", t:"：不是活動，不適用。"}
+  ],
+  closing:"",
+  wrong:"放行的話，同樣的貼文一直洗版，其他成員的貼文就被淹沒了。",
+  src:""},
+ {key:"ruleB", post:{id:912, key:"ruleB", category:"context", source:"human",
+   poster:{name:"好物團購站", kind:"page", cat:"購物", color:"#8A5A2E"}, ago:"35 分鐘",
+   title:"電風扇團購開跑", body:"電風扇團購開跑！原價 2,490，團購價 1,690，下單連結在留言區，數量有限。"},
+  lead:"",
+  lines:[
+    {q:"友善交流", t:"：語氣沒問題。"},
+    {q:"商業內容需標註", t:"：這是團購，可以張貼，但要加註「非社團合作」。"},
+    {q:"勿重複張貼", t:"：第一次張貼。"},
+    {q:"活動附時間地點", t:"：不是活動，不適用。"}
+  ],
+  closing:"",
+  wrong:"直接放行，成員可能以為這是社團合作的團購；退回的話，成員就少了一個可以參考的團購消息。",
+  src:""},
+ {key:"ruleA", post:{id:911, key:"ruleA", category:"accurate", source:"human",
+   poster:{name:"林佳穎", kind:"person"}, ago:"20 分鐘",
+   title:"週六淨灘活動", body:"這週六早上 9 點在旗津海岸有淨灘活動，自備手套和水壺，結束後一起吃早餐，想參加的留言＋1！"},
+  lead:"",
+  lines:[
+    {q:"友善交流", t:"：語氣友善。"},
+    {q:"商業內容需標註", t:"：不是商業內容。"},
+    {q:"勿重複張貼", t:"：第一次張貼。"},
+    {q:"活動附時間地點", t:"：時間和地點都有寫。"}
+  ],
+  closing:"四條都符合，就該放行。",
+  wrong:"退回的話，正常的社團活動被擋，成員就不想再分享了。",
+  src:""}
 ];
+/* 檢查：解析裡的粗體問句／版規名要和第二輪輔助欄的 q 一字不差；不一致就在 console 報錯 */
+(function checkPrepText(){
+  [[INOC, TIPS], [RULEP, RULES]].forEach(function(pair){
+    pair[0].forEach(function(it){
+      pair[1].forEach(function(a, i){
+        if (!it.lines[i] || it.lines[i].q !== a.q) console.error('[練習文字] ' + it.key + ' 第 ' + (i+1) + ' 條的問句與第二輪不一致：「' + (it.lines[i] && it.lines[i].q) + '」≠「' + a.q + '」');
+      });
+    });
+  });
+})();
 function aidList(){ return GROUP === 'treatment' ? TIPS : RULES; }
 function aidBoxHtml(){
   const t = GROUP === 'treatment';
@@ -1073,18 +1166,17 @@ const VLEVEL = {pass:0, warn:1, back:2};
 INOC.concat(RULEP).forEach(function(it){
   const exp = CAT_EXPECT[it.post.category];
   it.expected = exp; it.rec = VNAME[exp]; it.recNote = '';
-  it.tiers = {};
-  ['pass','warn','back'].forEach(function(v){ const d = Math.abs(VLEVEL[v] - VLEVEL[exp]); it.tiers[v] = d === 0 ? 'best' : (d === 1 ? 'ok' : 'wrong'); });
+  it.tiers = TIER_BY_CATEGORY[it.post.category];
 });
 const PREP = { stage:0, items:null, cardAt:0, fbAt:0, stageAt:0, picked:null };
 function prepItems(){
   if (GROUP === 'treatment') return ['inocA','inocC','inocB'].map(function(k){ return INOC.filter(function(x){ return x.key === k; })[0]; });
-  return RULEP;
+  return ['ruleC','ruleB','ruleA'].map(function(k){ return RULEP.filter(function(x){ return x.key === k; })[0]; });
 }
 function prepTruth(){
   return prepItems().map(function(it){
     const best = Object.keys(it.tiers).filter(function(v){ return it.tiers[v] === 'best'; });
-    return {key:it.key, category:it.post.category, expected:it.expected, best:best};
+    return {key:it.key, category:it.post.category, expected:it.expected, best:best, tiers:it.tiers};
   });
 }
 function renderPrep(){
@@ -1099,21 +1191,16 @@ function prepShow(){
   window.scrollTo({top:0});
   if (PREP.stage === 0){
     PREP.stageAt = performance.now();
-    box.innerHTML = '<div class="panel"><h2>重審之前，先對一下管理團隊的做法</h2>'
-      + (t ? '<p>剛剛第一輪很趕。管理團隊事後回頭看，發現有些貼文寫得很專業，內容卻有問題；也有些看起來像 AI 做的，內容卻是對的。只憑感覺處理，很容易出錯。</p>'
-             + '<p>資深管理員整理了 3 則別的社團的案例（不是剛剛那 12 則），請你先照自己的做法處理，再看管理團隊的處理建議，大約 2 分鐘。看完再重審剛剛那 12 則，會更有把握。</p>'
-           : '<p>剛剛第一輪很趕。管理團隊事後回頭看，發現不同管理員對社團版規的處理不太一樣。</p>'
-             + '<p>資深管理員整理了 3 則別的社團收到的案例（不是剛剛那 12 則），請你先照自己的想法處理，再看管理團隊的說明，大約 2 分鐘。看完再重審剛剛那 12 則，會更有把握。</p>')
-      + '<button class="btn primary" id="prepGo">先看案例</button></div>';
+    const card = PREP_CARDS[GROUP === 'treatment' ? 'treatment' : 'control'];
+    box.innerHTML = '<div class="panel"><h2>'+card.introTitle+'</h2>' + card.introHtml
+      + '<button class="btn primary" id="prepGo">'+card.introBtn+'</button></div>';
     byId('prepGo').onclick = function(){ R.prep.intro_ms = Math.round(performance.now() - PREP.stageAt); save(); PREP.stage = 1; prepShow(); };
     return;
   }
   if (PREP.stage > n){
     PREP.stageAt = performance.now();
-    box.innerHTML = '<div class="panel"><h2>案例看完了</h2>'
-      + (t ? '<p>重審時，每則貼文下方都會附上管理團隊剛剛用的四個問題。看過就好，不用回答；想看說明可以點開。</p>'
-           : '<p>重審時，每則貼文下方都會附上四條社團版規摘要。看過就好，不用回答；想看說明可以點開。</p>')
-      + '</div>';
+    const card = PREP_CARDS[t ? 'treatment' : 'control'];
+    box.innerHTML = '<div class="panel"><h2>'+card.outroTitle+'</h2>' + card.outroHtml + '</div>';
     byId('midPanel').hidden = false;
     save();
     return;
@@ -1123,7 +1210,7 @@ function prepShow(){
   box.innerHTML = '<div class="prepcard queue">'
     + '<div class="qhead"><span>管理團隊案例 '+PREP.stage+' / '+n+'</span></div>'
     + '<div class="ph">'+avHtml(p)+'<div class="pm"><div class="pn">'+esc(p.poster.name)+'</div><div class="ps">'+posterSub(p)+'</div></div></div>'
-    + (DEV ? rtagsHtml(p) + pendingTag(p) : '')
+    + (DEV ? rtagsHtml(p, true) + pendingTag(p) : '')
     + '<div class="pb"><b>'+esc(p.title)+'</b>'+esc(p.body)+'</div>'
     + '<div class="decide"><div class="vbtns">'
     +   '<button class="vbtn pass" data-v="pass" aria-pressed="false">放行</button>'
@@ -1140,13 +1227,14 @@ function prepPick(v){
   PREP.fbAt = performance.now();
   const tier = it.tiers[v];
   byId('m-scaffold').querySelectorAll('.vbtn').forEach(function(b){ b.disabled = true; b.setAttribute('aria-pressed', String(b.dataset.v === v)); });
-  const qs = (t ? TIPS : RULES).map(function(a){ return a.q; });
   byId('prepFb').innerHTML = '<div class="prepfb">'
     + '<span class="ftier '+tier+'">'+TIER_TXT[tier]+'</span>'
     + '<div class="frec">建議處置：'+it.rec+esc(it.recNote)+'</div>'
-    + '<p>'+it.lead+'</p>'
-    + '<ul>'+it.lines.map(function(l,i){ return '<li><b>'+esc(qs[i])+'</b> '+esc(l)+'</li>'; }).join('')+'</ul>'
-    + (it.src ? '<p class="fsrc">'+(it.srcRaw ? it.src : esc(it.src))+'</p>' : '')
+    + (it.lead ? '<p>'+esc(it.lead)+'</p>' : '')
+    + '<ul>'+it.lines.map(function(l){ return '<li><b>'+esc(l.q)+'</b>'+esc(l.t)+'</li>'; }).join('')+'</ul>'
+    + (it.closing ? '<p>'+esc(it.closing)+'</p>' : '')
+    + '<p><b>如果處理錯：</b>'+esc(it.wrong)+'</p>'
+    + (it.src ? '<p class="fsrc">'+esc(it.src)+'</p>' : '')
     + '<div class="fnext"><button class="btn primary" id="prepNext">'+(PREP.stage === n ? '繼續' : '下一則')+'</button></div></div>';
   byId('prepNext').onclick = function(){
     R.prep.items.push({key:it.key, shown_at:now(), verdict:v, tier:tier, rt_ms:rt, read_ms:Math.round(performance.now() - PREP.fbAt)});
@@ -1322,7 +1410,7 @@ function upload(stage){
   if (!/^https:\/\/script\.google\.com\//.test(GAS_URL)){ upDone(false, '尚未設定 GAS_URL'); return Promise.resolve(false); }
   const done = R.fast.filter(function(x){ return x.verdict !== 'timeout'; });
   const body = JSON.stringify({
-    stage:stage, study:STUDY, session:R.session, sid:R.sid, group:R.group, list:R.list, mode:MODE || '', assign_source:R.assign_source, dev:DEV,
+    stage:stage, study:STUDY, scaffold_version:SCAFFOLD_VERSION, session:R.session, sid:R.sid, group:R.group, list:R.list, mode:MODE || '', assign_source:R.assign_source, dev:DEV,
     started:R.started, finished:R.finished, time_limit_s:T_SEC,
     n_reloads:(R.reloads || []).length, assign_persisted:R.assign_persisted,
     n_fast:R.fast.length, n_timeout:R.fast.length - done.length,

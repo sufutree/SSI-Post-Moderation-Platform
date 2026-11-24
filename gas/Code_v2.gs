@@ -9,7 +9,7 @@
  * 新增欄位都接在最後面較安全；本版欄位與 v1 不同，請用新試算表，不要沿用 v1 的表。
  */
 const P_COLS = ['received_at','stage','study','session','sid','group','list','mode','dev','started','finished','time_limit_s',
-  'n_fast','n_timeout','mean_conf','n_review','n_changed','screen','ua','time_limits','raw_json','n_reloads','assign_persisted','assign_source'];
+  'n_fast','n_timeout','mean_conf','n_review','n_changed','screen','ua','time_limits','raw_json','n_reloads','assign_persisted','assign_source','scaffold_version'];
 const T_COLS = ['session','sid','group','list','dev','time_limit_s',
   'post_id','post_code','claim_id','material_code','category','expected','source','poster_kind',
   'fast_position','fast_verdict','fast_rt_ms','fast_confidence','fast_conf_ms','fast_conf_adjust','fast_limit_s',

@@ -14,6 +14,7 @@
 | group | 文字 | treatment（鷹架）／control | 管理員編號第 1 碼（S／C）；已不再隨機分派 |
 | list | 文字 | A／B（貼文清單） | 管理員編號第 2 碼（A／B）；已不再隨機分派 |
 | assign_source | 文字 | 分派來源：code＝由管理員編號決定；dev_url＝研究者模式用網址覆蓋（只會出現在 dev=1 的測試資料） | 按「開始值班」 |
+| scaffold_version | 文字 | 鷹架與對照組練習／輔助欄的內容版本，目前為 `scaffold_v2_1124`（鷹架內容版本 scaffold_v2_1124）；也寫在 raw_json | 載入頁面 |
 | mode | 文字 | 網址 ?mode=（pilot 或空白） | 網址參數 |
 | dev | 布林 | 是否研究者模式 | ?dev=1 |
 | started／finished | ISO 時間 | 開始、完成時間 | 開始頁／結束頁 |
@@ -35,17 +36,18 @@
 | study, session, sid, group, list, started, finished, device{w,h,ua} | 同上 | 載入／開始 |
 | assigned_at | 分派時間（ISO） | 按「開始值班」 |
 | assign_source | 同上 | 按「開始值班」 |
+| scaffold_version | 同上（`scaffold_v2_1124`） | 載入頁面 |
 | assign_persisted | 進度是否存進瀏覽器 | 按「開始值班」 |
 | reloads[] | 重新整理事件 `{at, step}`（step＝重新整理當時所在步驟） | 接續時 |
 | stage_times | 各步驟（brief, fast, mid, review, debrief, end）開始時間 | go() |
 | fast_time_limit_ms, fast_time_limits | 第一輪限時（毫秒、每則） | 第一輪 |
 | fast_order, review_order | 兩輪貼文呈現順序（post id） | 兩輪 |
 | fast[] | 第一輪每則：id, position, shown_at, limit_ms, verdict（pass/warn/back/timeout）, rt_ms, confidence, conf_ms, conf_adjust；重新整理時正在計時的那一則另有 reason:'reload'（verdict=timeout） | 第一輪 |
-| prep | 第二輪前練習：kind（inoc/rules）, order, items[{key, shown_at, verdict, tier, rt_ms, read_ms}], intro_ms, outro_ms | mid |
+| prep | 第二輪前練習：kind（inoc/rules）, order（鷹架組 inocA→inocC→inocB；對照組 ruleC→ruleB→ruleA）, items[{key, shown_at, verdict, tier, rt_ms, read_ms}], intro_ms, outro_ms | mid |
 | review[] | 第二輪每則，欄位見下方 | 第二輪 |
 | community | `{released:[{id}]}` 第一輪放行紀錄（無數字） | 第一輪 |
 | basis_config | basis.js 勾選清單（id, label, code） | 常數 |
-| prep_truth | 練習正解 `{key, category, expected, best}` | 常數 |
+| prep_truth | 練習正解 `{key, category, expected, best, tiers}`；tiers 為三個按鈕各自的回饋層級（best＝✓ 判得好、ok＝△ 可以但還能更好、wrong＝✗ 再想想），依 scaffold_v2_1124：錯誤訊息類退回 best／加註 ok／放行 wrong；需補充脈絡類加註 best／放行與退回 wrong；沒問題類放行 best／加註 ok／退回 wrong | 常數 |
 | truth | 該受試者 12 則的 `{id, post_code, claim_id, material_code, source, category, expected, poster_kind, version_picked}`（post_code 如 P01H、material_code 如 A4，只供研究者對照；`version_picked`＝AI 版從 3 個生成版本中選了第幾版，人類版為 null；內容版本 `fish12_v2_content_1124`：human 版沿用 1120 版，AI 版為 2026-11-24 由 Claude Sonnet 5.5 依要點卡生成，模型看不到人類版）；清單見頂層 `list` | posts.js＋list |
 
 ### review[] 每則欄位

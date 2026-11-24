@@ -165,3 +165,10 @@
 ## 第 11 段：更新 AI 版貼文為 1124 版（2026-11-24）
 - posts.js：P01A～P12A 的 title、body 換成 `posts_content_v2_1124.json`（逐字，P08A 條列換行保留）；每篇 AI 加 `generation`（model、date、prompt、version_picked、of，只給研究者對照，不顯示在受試者畫面）；檔頭補註 AI 版生成說明。human 版、debrief、poster、claim_id、清單規則未動。
 - 匯出：raw_json 的 truth 每則多 `version_picked`（AI 版為 1–3，人類版 null）；DATA_DICTIONARY_v2.md 補欄位與內容版本 `fish12_v2_content_1124`。trials 表欄位不變，不需重新部署 Apps Script。
+
+## 第 12 段：鷹架與對照組的練習、輔助欄內容更新（scaffold_v2_1124，2026-11-24）
+- 文字一律照《鷹架內容草稿_v2_1124》：鷹架組四個問句（TIPS，標題「判讀前想一想」，key 維持 cx／pt／in／sk）、開場卡、三則練習解析（含「如果處理錯」）、結語卡；對照組四條版規（RULES，標題「社團版規」，條文不變、點開說明改為問句）、開場卡、三則說明、結語卡。
+- 練習順序：鷹架組 inocA→inocC→inocB；對照組 ruleC→ruleB→ruleA。回饋層級改用明確對照表 `TIER_BY_CATEGORY`（不再用「差幾級」推算），標籤「✓ 判得好／△ 可以，但還能更好／✗ 再想想」。
+- 練習③（inocB）：頁面本來就沒引用圖片（`ai_images/inoc_902.png` 檔案保留、未被引用）；已移除「AI 生成」說明，dev 模式下練習貼文也不再顯示「AI 撰寫」標籤；貼文標題與內文不變。
+- 解析裡的粗體問句與第二輪問句一字不差，載入時由 `checkPrepText()` 檢查，不一致 console 報錯。
+- 紀錄：R.prep.order 為新順序；prep_truth 增加 tiers；新增 `scaffold_version`（`scaffold_v2_1124`，participants 欄位與 raw_json）。`gas/Code_v2.gs` 的 P_COLS 末端加 scaffold_version，需重新部署。
