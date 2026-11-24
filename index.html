@@ -452,7 +452,7 @@ table.mini thead th{color:var(--ink-3);font-weight:500;font-size:.72rem}
       <h2>湧入的貼文暫時告一段落</h2>
       <p>現在有時間把剛剛的 12 則重新看一遍，這次不限時間。你可以維持剛才的決定，也可以改變。</p>
       <div class="crit-slot"></div>
-      <p>放行與加註提醒後放行的貼文會出現在社團，加註的下方附上你選的提醒；退回的貼文不會出現，作者會收到你選的理由，已放行的會從社團動態移除。</p>
+      <p>放行與加註提醒後放行的貼文會出現在社團，加註的下方附上你選的提醒；退回的貼文不會出現，作者會收到你寫的理由，已放行的會從社團動態移除。</p>
       <button class="btn primary" id="btnMid">開始二次審核</button>
     </div>
   </section>
@@ -752,7 +752,7 @@ document.addEventListener('keydown', function(e){
 /* ================= 流程 ================= */
 const STEPS = ['start','brief','fast','mid','review','debrief','end'];  /* setup 是研究者頁，不在流程內 */
 const WIDE = [];
-const PHASE = {fast:'第一輪', mid:'第一輪', review:'二次審核'};
+const PHASE = {fast:'第一輪', mid:'二次審核前', review:'二次審核'};
 let cur = 'start';
 function go(step, resume){
   document.querySelectorAll('.step').forEach(function(el){ el.hidden = true; });
