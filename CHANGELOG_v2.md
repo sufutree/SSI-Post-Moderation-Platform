@@ -161,3 +161,7 @@
 ### 第 10 段修訂（2026-11-20，依更新後的 prompt）
 - 開始頁改為：標題「「台灣綠能生活討論區」管理後台」＋三段內文（投稿增加／今晚有 12 則貼文、約 15 分鐘／請輸入管理員編號登入後台），輸入框「管理員編號」，按鈕「登入」；錯誤提示改為「管理員編號不正確，請再確認一次」。角色說明頁（s-brief）未動。
 - 受試者畫面用語盤點（待 Sufu 確認後再改）：仍含「研究人員」的有兩處——已完成編號的提示（`btnStart` 內）與上傳失敗訊息（`upDone`）。其餘「研究／施測／受試者」只出現在程式註解、研究者頁（?setup=1、?dev=1）與事後說明頁（例外）。
+
+## 第 11 段：更新 AI 版貼文為 1124 版（2026-11-24）
+- posts.js：P01A～P12A 的 title、body 換成 `posts_content_v2_1124.json`（逐字，P08A 條列換行保留）；每篇 AI 加 `generation`（model、date、prompt、version_picked、of，只給研究者對照，不顯示在受試者畫面）；檔頭補註 AI 版生成說明。human 版、debrief、poster、claim_id、清單規則未動。
+- 匯出：raw_json 的 truth 每則多 `version_picked`（AI 版為 1–3，人類版 null）；DATA_DICTIONARY_v2.md 補欄位與內容版本 `fish12_v2_content_1124`。trials 表欄位不變，不需重新部署 Apps Script。

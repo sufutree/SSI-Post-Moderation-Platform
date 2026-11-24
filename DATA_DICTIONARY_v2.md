@@ -46,7 +46,7 @@
 | community | `{released:[{id}]}` 第一輪放行紀錄（無數字） | 第一輪 |
 | basis_config | basis.js 勾選清單（id, label, code） | 常數 |
 | prep_truth | 練習正解 `{key, category, expected, best}` | 常數 |
-| truth | 該受試者 12 則的 `{id, post_code, claim_id, material_code, source, category, expected, poster_kind}`（post_code 如 P01H、material_code 如 A4，只供研究者對照）；清單見頂層 `list` | posts.js＋list |
+| truth | 該受試者 12 則的 `{id, post_code, claim_id, material_code, source, category, expected, poster_kind, version_picked}`（post_code 如 P01H、material_code 如 A4，只供研究者對照；`version_picked`＝AI 版從 3 個生成版本中選了第幾版，人類版為 null；內容版本 `fish12_v2_content_1124`：human 版沿用 1120 版，AI 版為 2026-11-24 由 Claude Sonnet 5.5 依要點卡生成，模型看不到人類版）；清單見頂層 `list` | posts.js＋list |
 
 ### review[] 每則欄位
 id, position, shown_at, first_click_ms（第一次點處置）, verdict_changes[{v,ms}]（處置切換）, verdict（最終處置）,

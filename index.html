@@ -1294,7 +1294,7 @@ function payload(){
   return JSON.stringify(Object.assign({}, R, {
     basis_config: BASIS,
     prep_truth: prepTruth(),
-    truth: POSTS.map(function(p){ return {id:p.id, post_code:p.post_code, claim_id:p.claim_id, material_code:p.material_code, source:p.source, category:p.category, expected:p.expected, poster_kind:p.poster.kind}; })
+    truth: POSTS.map(function(p){ return {id:p.id, post_code:p.post_code, claim_id:p.claim_id, material_code:p.material_code, source:p.source, category:p.category, expected:p.expected, poster_kind:p.poster.kind, version_picked:(p.generation ? p.generation.version_picked : null)}; })
   }), null, 2);
 }
 
